@@ -14,7 +14,7 @@
 # Compiled Dynamic libraries
 *.so
 *.dylib
-*.dll
+#*.dll
 
 # Fortran module files
 *.mod
@@ -30,3 +30,8 @@
 *.exe
 *.out
 *.app
+bin/PDLab_DLL_Layout.ilk
+bin/PDLab_DLL_Layout.pdb
+bin/PDLab_DLL_Layout.exp
+build/msvs2019/.vs/
+build/msvs2019/x64/
