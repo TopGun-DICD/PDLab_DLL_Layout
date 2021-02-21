@@ -1,4 +1,4 @@
-#include "LayoutReader_GDSIIbin.hpp"
+#include "LayoutReader_GDSIIascii.hpp"
 
 #include <ctime>
 
@@ -119,86 +119,28 @@ union UNION_DOUBLE {
   unsigned char byteArray[sizeof(double)];
 };
 
-void Normalize_WORD(__int16 &_value) {
-  UNION_WORD u;
-  unsigned char tempByte = 0;
 
-  u.value = _value;
-  tempByte = u.byteArray[1];
-  u.byteArray[1] = u.byteArray[0];
-  u.byteArray[0] = tempByte;
-  _value = u.value;
-
-  if (_value & 0x8000) {
-    _value &= 0x7fff;
-    _value ^= 0x7fff;
-    _value += 1;
-    _value *= -1;
-  }
-}
-
-void Normalize_DWORD(__int32 &_value) {
-  UNION_DWORD u;
-  unsigned char tempByte = 0;
-
-  u.value = _value;
-  tempByte = u.byteArray[3];
-  u.byteArray[3] = u.byteArray[0];
-  u.byteArray[0] = tempByte;
-  tempByte = u.byteArray[2];
-  u.byteArray[2] = u.byteArray[1];
-  u.byteArray[1] = tempByte;
-  _value = u.value;
-
-  if (_value & 0x80000000) {
-    _value &= 0x7fffffff;
-    _value ^= 0x7fffffff;
-    _value += 1;
-    _value *= -1;
-  }
-}
-
-void Normalize_DOUBLE(double &_value) {
-  UNION_DOUBLE u;
-  unsigned char tempByte = 0;
-
-  u.value = _value;
-
-  int realSign = u.byteArray[0] & 0x80;
-  int realExponent = (u.byteArray[0] & 0x7f) - 64;
-
-  double realMantissa = 0.0;
-  for (int i = 1; i < 8; ++i) {
-    realMantissa *= 0x100;
-    realMantissa += u.byteArray[i];
-  }
-
-  realMantissa /= pow((double)2, 7 * 8);
-  realMantissa *= pow((double)16, realExponent);
-  if (realSign)
-    realMantissa *= -1;
-
-  _value = realMantissa;
-}
-
-
-GDSIIBinaryReader::GDSIIBinaryReader() : p_activeLibrary(nullptr), p_activeElement(nullptr), p_activeItem(nullptr) {
+GDSIIASCIIReader::GDSIIASCIIReader() : p_activeLibrary(nullptr), p_activeElement(nullptr), p_activeItem(nullptr) {
 
 }
 
-bool GDSIIBinaryReader::IsMyFormat(const std::wstring &fName) {
+bool GDSIIASCIIReader::IsMyFormat(const std::wstring &fName) {
   fileName = fName;
+
+  return false;
 
   if (fName.substr(fName.find_last_of(L".") + 1) == L"gds")
     return true;
-  if (fName.substr(fName.find_last_of(L".") + 1) == L"gdsii")
+  if (fName.substr(fName.find_last_of(L".") + 1) == L"gdt")
+    return true;  
+  if (fName.substr(fName.find_last_of(L".") + 1) == L"txt")
     return true;
 
   return false;
 }
 
-bool GDSIIBinaryReader::Read(Layout *layout) {
-  if (!layout)
+bool GDSIIASCIIReader::Read(Layout *layout) {
+/*  if (!layout)
     return false;
   p_data = layout;
 
@@ -207,11 +149,9 @@ bool GDSIIBinaryReader::Read(Layout *layout) {
     return false;
 
   Record gdsiiRecord;
-  while (true) {
+  while (!file.eof()) {
 
     file.read(reinterpret_cast<char *>(&gdsiiRecord), sizeof(Record));
-    if (file.eof())
-      break;
     Normalize_WORD(gdsiiRecord.length);
     gdsiiRecord.length -= sizeof(Record);
 
@@ -283,17 +223,17 @@ bool GDSIIBinaryReader::Read(Layout *layout) {
 
   file .close();
   //std::clock_t stopReading = std::clock();
-  layout->fileFormat = FileFormat::GDSII_bin;
+  layout->fileFormat = FileFormat::GDSII_bin;*/
   return ResolveReferences();
 }
 
-void GDSIIBinaryReader::ReadSection_HEADER(Record &_record) {
+void GDSIIASCIIReader::ReadSection_HEADER(Record &_record) {
   //TODO: read version number
   file.seekg(_record.length, std::ios_base::cur);
 }
 
 
-void GDSIIBinaryReader::ReadSection_BEGINLIBRARY(Record &_record) {
+void GDSIIASCIIReader::ReadSection_BEGINLIBRARY(Record &_record) {
   if (p_activeLibrary) {
     //TODO: push error, library already started
     return;
@@ -322,7 +262,7 @@ void GDSIIBinaryReader::ReadSection_BEGINLIBRARY(Record &_record) {
   */
 }
 
-void GDSIIBinaryReader::ReadSection_LIBNAME(Record &_record) {
+void GDSIIASCIIReader::ReadSection_LIBNAME(Record &_record) {
   if (!p_activeLibrary) {
     ////MessageManager::Get()->PushError("Format error. Found LIBNAME section outside of library.");
     return;
@@ -344,7 +284,7 @@ void GDSIIBinaryReader::ReadSection_LIBNAME(Record &_record) {
   str = nullptr;
 }
 
-void GDSIIBinaryReader::ReadSection_UNITS(Record &_record) {
+void GDSIIASCIIReader::ReadSection_UNITS(Record &_record) {
   if (!p_activeLibrary) {
     //MessageManager::Get()->PushError("Format error. Found UNITS section outside of library.");
     return;
@@ -358,39 +298,19 @@ void GDSIIBinaryReader::ReadSection_UNITS(Record &_record) {
     return;
   }
 
-  file.read(reinterpret_cast<char *>(&p_activeLibrary->units), sizeof(Units));
+  /*file.read(reinterpret_cast<char *>(&p_activeLibrary->units), sizeof(Units));
 
   Normalize_DOUBLE(p_activeLibrary->units.user);
   Normalize_DOUBLE(p_activeLibrary->units.physical);
+  */
 }
 
-void GDSIIBinaryReader::ReadSection_ENDLIBRARY(Record &_record) {
+void GDSIIASCIIReader::ReadSection_ENDLIBRARY(Record &_record) {
   //file.seekg(_record.length, std::ios_base::cur);
   // Nothing to do
-
-  if (!p_activeLibrary->elements.size()) {
-    p_activeLibrary = nullptr;
-    return;
-  }
-
-  p_activeLibrary->min = p_activeLibrary->elements[0]->min;
-  p_activeLibrary->max = p_activeLibrary->elements[0]->max;
-
-  for (size_t i = 0; i < p_activeLibrary->elements.size(); ++i) {
-    if (p_activeLibrary->min.x > p_activeLibrary->elements[i]->min.x)
-      p_activeLibrary->min.x = p_activeLibrary->elements[i]->min.x;
-    if (p_activeLibrary->min.y > p_activeLibrary->elements[i]->min.y)
-      p_activeLibrary->min.y = p_activeLibrary->elements[i]->min.y;
-    if (p_activeLibrary->max.x > p_activeLibrary->elements[i]->max.x)
-      p_activeLibrary->max.x = p_activeLibrary->elements[i]->max.x;
-    if (p_activeLibrary->max.y > p_activeLibrary->elements[i]->max.y)
-      p_activeLibrary->max.y = p_activeLibrary->elements[i]->max.y;
-  }
-
-  p_activeLibrary = nullptr;
 }
 
-void GDSIIBinaryReader::ReadSection_BEGINSTRUCTURE(Record &_record) {
+void GDSIIASCIIReader::ReadSection_BEGINSTRUCTURE(Record &_record) {
   if (!p_activeLibrary) {
     //MessageManager::Get()->PushError("Format error. Found BGNSTR section outside of library.");
     return;
@@ -428,7 +348,7 @@ void GDSIIBinaryReader::ReadSection_BEGINSTRUCTURE(Record &_record) {
   */
 }
 
-void GDSIIBinaryReader::ReadSection_STRNAME(Record &_record) {
+void GDSIIASCIIReader::ReadSection_STRNAME(Record &_record) {
   if (!p_activeLibrary) {
     //MessageManager::Get()->PushError("Format error. Found STRNAME section outside of library.");
     return;
@@ -450,7 +370,7 @@ void GDSIIBinaryReader::ReadSection_STRNAME(Record &_record) {
   str = nullptr;
 }
 
-void GDSIIBinaryReader::ReadSection_ENDSTRUCTURE(Record &_record) {
+void GDSIIASCIIReader::ReadSection_ENDSTRUCTURE(Record &_record) {
   if (!p_activeLibrary) {
     //MessageManager::Get()->PushError("Format error. Found ENDSTR section outside of library.");
     return;
@@ -464,29 +384,10 @@ void GDSIIBinaryReader::ReadSection_ENDSTRUCTURE(Record &_record) {
     return;
   }
 
-  p_activeElement->min.x = p_activeElement->items[0]->coords[0].x;
-  p_activeElement->min.y = p_activeElement->items[0]->coords[0].y;
-  p_activeElement->max = p_activeElement->min;
-
-  for (size_t i = 0; i < p_activeElement->items.size(); ++i) {
-    if (p_activeElement->items[i]->type == ItemType::structRef)
-      continue;
-    for (size_t j = 0; j < p_activeElement->items[i]->coords.size(); ++j) {
-      if (p_activeElement->min.x > p_activeElement->items[i]->coords[j].x)
-        p_activeElement->min.x = p_activeElement->items[i]->coords[j].x;
-      if (p_activeElement->min.y > p_activeElement->items[i]->coords[j].y)
-        p_activeElement->min.y = p_activeElement->items[i]->coords[j].y;
-      if (p_activeElement->max.x < p_activeElement->items[i]->coords[j].x)
-        p_activeElement->max.x = p_activeElement->items[i]->coords[j].x;
-      if (p_activeElement->max.y < p_activeElement->items[i]->coords[j].y)
-        p_activeElement->max.y = p_activeElement->items[i]->coords[j].y;
-    }
-  }
-
   p_activeElement = nullptr;
 }
 
-void GDSIIBinaryReader::ReadSection_BOUNDARY(Record &_record) {
+void GDSIIASCIIReader::ReadSection_BOUNDARY(Record &_record) {
   if (!p_activeLibrary) {
     //MessageManager::Get()->PushError("Format error. Found BOUNDARY section outside of library.");
     return;
@@ -507,7 +408,7 @@ void GDSIIBinaryReader::ReadSection_BOUNDARY(Record &_record) {
   p_activeElement->items.push_back(p_activeItem);
 }
 
-void GDSIIBinaryReader::ReadSection_PATH(Record &_record) {
+void GDSIIASCIIReader::ReadSection_PATH(Record &_record) {
   if (!p_activeLibrary) {
     //MessageManager::Get()->PushError("Format error. Found PATH section outside of library.");
     return;
@@ -531,7 +432,7 @@ void GDSIIBinaryReader::ReadSection_PATH(Record &_record) {
   p_activeElement->items.push_back(p_activeItem);
 }
 
-void GDSIIBinaryReader::ReadSection_SREF(Record &_record) {
+void GDSIIASCIIReader::ReadSection_SREF(Record &_record) {
   if (!p_activeLibrary) {
     //MessageManager::Get()->PushError("Format error. Found SREF section outside of library.");
     return;
@@ -558,7 +459,7 @@ void GDSIIBinaryReader::ReadSection_SREF(Record &_record) {
 
 //void ReadSection_AREF(Record &_record);
 
-void GDSIIBinaryReader::ReadSection_TEXT(Record &_record) {
+void GDSIIASCIIReader::ReadSection_TEXT(Record &_record) {
   if (!p_activeLibrary) {
     //MessageManager::Get()->PushError("Format error. Found TEXT section outside of library.");
     return;
@@ -584,7 +485,7 @@ void GDSIIBinaryReader::ReadSection_TEXT(Record &_record) {
   p_activeElement->items.push_back(p_activeItem);
 }
 
-void GDSIIBinaryReader::ReadSection_LAYER(Record &_record) {
+void GDSIIASCIIReader::ReadSection_LAYER(Record &_record) {
   if (!p_activeLibrary) {
     //MessageManager::Get()->PushError("Format error. Found LAYER section outside of library.");
     return;
@@ -599,10 +500,10 @@ void GDSIIBinaryReader::ReadSection_LAYER(Record &_record) {
   }
 
   file.read(reinterpret_cast<char *>(&p_activeItem->layer), sizeof(__int16));
-  Normalize_WORD(p_activeItem->layer);
+  //Normalize_WORD(p_activeItem->layer);
 }
 
-void GDSIIBinaryReader::ReadSection_DATATYPE(Record &_record) {
+void GDSIIASCIIReader::ReadSection_DATATYPE(Record &_record) {
   if (!p_activeLibrary) {
     //MessageManager::Get()->PushError("Format error. Found DATATYPE section outside of library.");
     return;
@@ -618,7 +519,7 @@ void GDSIIBinaryReader::ReadSection_DATATYPE(Record &_record) {
 
   __int16 dataType = 0;
   file.read(reinterpret_cast<char *>(&dataType), sizeof(__int16));
-  Normalize_WORD(dataType);
+  //Normalize_WORD(dataType);
 
   switch (p_activeItem->type) {
     case ItemType::boundary:
@@ -633,7 +534,7 @@ void GDSIIBinaryReader::ReadSection_DATATYPE(Record &_record) {
   }
 }
 
-void GDSIIBinaryReader::ReadSection_WIDTH(Record &_record) {
+void GDSIIASCIIReader::ReadSection_WIDTH(Record &_record) {
   if (!p_activeLibrary) {
     //MessageManager::Get()->PushError("Format error. Found WIDTH section outside of library.");
     return;
@@ -649,7 +550,7 @@ void GDSIIBinaryReader::ReadSection_WIDTH(Record &_record) {
 
   __int32 width = 0;
   file.read(reinterpret_cast<char *>(&width), sizeof(__int32));
-  Normalize_DWORD(width);
+  //Normalize_DWORD(width);
 
   switch (p_activeItem->type) {
     case ItemType::path:
@@ -664,7 +565,7 @@ void GDSIIBinaryReader::ReadSection_WIDTH(Record &_record) {
   }
 }
 
-void GDSIIBinaryReader::ReadSection_XY(Record &_record) {
+void GDSIIASCIIReader::ReadSection_XY(Record &_record) {
   if (!p_activeLibrary) {
     //MessageManager::Get()->PushError("Format error. Found XY section outside of library.");
     return;
@@ -678,7 +579,7 @@ void GDSIIBinaryReader::ReadSection_XY(Record &_record) {
     return;
   }
 
-  int numberOfCoors = _record.length / sizeof(Coord);
+  /*int numberOfCoors = _record.length / sizeof(Coord);
 
   GeometryItem_Boundary      *p_boundary = nullptr;
   GeometryItem_Path          *p_path = nullptr;
@@ -746,10 +647,10 @@ void GDSIIBinaryReader::ReadSection_XY(Record &_record) {
     default:
       ;
       //MessageManager::Get()->PushError("Format error. Found XY section given for inproper type of element.");
-  }
+  } */
 }
 
-void GDSIIBinaryReader::ReadSection_ENDELEMENT(Record &_record) {
+void GDSIIASCIIReader::ReadSection_ENDELEMENT(Record &_record) {
   if (!p_activeLibrary) {
     //MessageManager::Get()->PushError("Format error. Found ENDELEMENT section outside of library.");
     return;
@@ -766,7 +667,7 @@ void GDSIIBinaryReader::ReadSection_ENDELEMENT(Record &_record) {
   p_activeItem = nullptr;
 }
 
-void GDSIIBinaryReader::ReadSection_SNAME(Record &_record) {
+void GDSIIASCIIReader::ReadSection_SNAME(Record &_record) {
   if (!p_activeLibrary) {
     //MessageManager::Get()->PushError("Format error. Found SNAME section outside of library.");
     return;
@@ -792,11 +693,11 @@ void GDSIIBinaryReader::ReadSection_SNAME(Record &_record) {
   str = nullptr;
 }
 
-//void GDSIIBinaryReader::ReadSection_COLROW(Record &_record) {}
-//void GDSIIBinaryReader::ReadSection_TEXTNODE(Record &_record) {}
-//void GDSIIBinaryReader::ReadSection_NODE(Record &_record) {}
+//void GDSIIASCIIReader::ReadSection_COLROW(Record &_record) {}
+//void GDSIIASCIIReader::ReadSection_TEXTNODE(Record &_record) {}
+//void GDSIIASCIIReader::ReadSection_NODE(Record &_record) {}
 
-void GDSIIBinaryReader::ReadSection_TEXTTYPE(Record &_record) {
+void GDSIIASCIIReader::ReadSection_TEXTTYPE(Record &_record) {
   if (!p_activeLibrary) {
     //MessageManager::Get()->PushError("Format error. Found TEXTTYPE section outside of library.");
     return;
@@ -816,12 +717,12 @@ void GDSIIBinaryReader::ReadSection_TEXTTYPE(Record &_record) {
 
   __int16 type;
   file.read(reinterpret_cast<char *>(&type), sizeof(__int16));
-  Normalize_WORD(type);
+  //Normalize_WORD(type);
 
   static_cast<GeometryItem_Text *>(p_activeItem)->textType = type;
 }
 
-void GDSIIBinaryReader::ReadSection_PRESENTATION(Record &_record) {
+void GDSIIASCIIReader::ReadSection_PRESENTATION(Record &_record) {
   if (!p_activeLibrary) {
     //MessageManager::Get()->PushError("Format error. Found PRESENTATION section outside of library.");
     return;
@@ -841,14 +742,14 @@ void GDSIIBinaryReader::ReadSection_PRESENTATION(Record &_record) {
 
   __int16 flags;
   file.read(reinterpret_cast<char *>(&flags), sizeof(__int16));
-  Normalize_WORD(flags);
+  //Normalize_WORD(flags);
 
   static_cast<GeometryItem_Text *>(p_activeItem)->flagsPresentation = flags;
 }
 
 // UNUSED
 
-void GDSIIBinaryReader::ReadSection_STRING(Record &_record) {
+void GDSIIASCIIReader::ReadSection_STRING(Record &_record) {
   if (!p_activeLibrary) {
     //MessageManager::Get()->PushError("Format error. Found STRING section outside of library.");
     return;
@@ -874,7 +775,7 @@ void GDSIIBinaryReader::ReadSection_STRING(Record &_record) {
   str = nullptr;
 }
 
-void GDSIIBinaryReader::ReadSection_STRANS(Record &_record) {
+void GDSIIASCIIReader::ReadSection_STRANS(Record &_record) {
   if (!p_activeLibrary) {
     //MessageManager::Get()->PushError("Format error. Found STRANS section outside of library.");
     return;
@@ -890,7 +791,7 @@ void GDSIIBinaryReader::ReadSection_STRANS(Record &_record) {
 
   __int16 flags;
   file.read(reinterpret_cast<char *>(&flags), sizeof(__int16));
-  Normalize_WORD(flags);
+  //Normalize_WORD(flags);
 
   switch (p_activeItem->type) {
     case ItemType::structRef:
@@ -908,7 +809,7 @@ void GDSIIBinaryReader::ReadSection_STRANS(Record &_record) {
   }
 }
 
-void GDSIIBinaryReader::ReadSection_MAG(Record &_record) {
+void GDSIIASCIIReader::ReadSection_MAG(Record &_record) {
   if (!p_activeLibrary) {
     //MessageManager::Get()->PushError("Format error. Found MAG section outside of library.");
     return;
@@ -924,7 +825,7 @@ void GDSIIBinaryReader::ReadSection_MAG(Record &_record) {
 
   double mag = 0.0;
   file.read(reinterpret_cast<char *>(&mag), sizeof(double));
-  Normalize_DOUBLE(mag);
+  //Normalize_DOUBLE(mag);
 
   switch (p_activeItem->type) {
     case ItemType::structRef:
@@ -942,13 +843,13 @@ void GDSIIBinaryReader::ReadSection_MAG(Record &_record) {
   }
 }
 
-//void GDSIIBinaryReader::ReadSection_ANGLE(Record &_record) {}
-//void GDSIIBinaryReader::ReadSection_LINKTYPE(Record &_record) {}
-//void GDSIIBinaryReader::ReadSection_LINKKEYS(Record &_record) {}
-//void GDSIIBinaryReader::ReadSection_REFLIBS(Record &_record) {}
-//void GDSIIBinaryReader::ReadSection_FONTS(Record &_record) {}
+//void GDSIIASCIIReader::ReadSection_ANGLE(Record &_record) {}
+//void GDSIIASCIIReader::ReadSection_LINKTYPE(Record &_record) {}
+//void GDSIIASCIIReader::ReadSection_LINKKEYS(Record &_record) {}
+//void GDSIIASCIIReader::ReadSection_REFLIBS(Record &_record) {}
+//void GDSIIASCIIReader::ReadSection_FONTS(Record &_record) {}
 
-void GDSIIBinaryReader::ReadSection_PATHTYPE(Record &_record) {
+void GDSIIASCIIReader::ReadSection_PATHTYPE(Record &_record) {
   if (!p_activeLibrary) {
     //MessageManager::Get()->PushError("Format error. Found PATHTYPE section outside of library.");
     return;
@@ -964,7 +865,7 @@ void GDSIIBinaryReader::ReadSection_PATHTYPE(Record &_record) {
 
   __int16 type;
   file.read(reinterpret_cast<char *>(&type), sizeof(__int16));
-  Normalize_WORD(type);
+  //Normalize_WORD(type);
 
   switch (p_activeItem->type) {
     case ItemType::path:
@@ -979,17 +880,17 @@ void GDSIIBinaryReader::ReadSection_PATHTYPE(Record &_record) {
   }
 }
 
-//void GDSIIBinaryReader::ReadSection_GENERATIONS(Record &_record) {}
-//void GDSIIBinaryReader::ReadSection_ATTRTABLE(Record &_record) {}
-//void GDSIIBinaryReader::ReadSection_STYPTABLE(Record &_record) {}
-//void GDSIIBinaryReader::ReadSection_STRTYPE(Record &_record) {}
-//void GDSIIBinaryReader::ReadSection_ELFLAGS(Record &_record) {}
-//void GDSIIBinaryReader::ReadSection_ELKEY(Record &_record) {}
+//void GDSIIASCIIReader::ReadSection_GENERATIONS(Record &_record) {}
+//void GDSIIASCIIReader::ReadSection_ATTRTABLE(Record &_record) {}
+//void GDSIIASCIIReader::ReadSection_STYPTABLE(Record &_record) {}
+//void GDSIIASCIIReader::ReadSection_STRTYPE(Record &_record) {}
+//void GDSIIASCIIReader::ReadSection_ELFLAGS(Record &_record) {}
+//void GDSIIASCIIReader::ReadSection_ELKEY(Record &_record) {}
 // UNUSED
 // UNUSED
-//void GDSIIBinaryReader::ReadSection_NODETYPE(Record &_record) {}
+//void GDSIIASCIIReader::ReadSection_NODETYPE(Record &_record) {}
 
-void GDSIIBinaryReader::ReadSection_PROPATTR(Record &_record) {
+void GDSIIASCIIReader::ReadSection_PROPATTR(Record &_record) {
   if (!p_activeLibrary) {
     //MessageManager::Get()->PushError("Format error. Found PROPATTR section outside of library.");
     return;
@@ -1009,13 +910,13 @@ void GDSIIBinaryReader::ReadSection_PROPATTR(Record &_record) {
 
   Property prop = { 0, "" };
   file.read(reinterpret_cast<char *>(&prop.index), sizeof(__int16));
-  Normalize_WORD(prop.index);
+  //Normalize_WORD(prop.index);
 
   p_activeItem->properties.push_back(prop);
   //p_activeItem->readingProperty = true;
 }
 
-void GDSIIBinaryReader::ReadSection_PROPVALUE(Record &_record) {
+void GDSIIASCIIReader::ReadSection_PROPVALUE(Record &_record) {
   if (!p_activeLibrary) {
     //MessageManager::Get()->PushError("Format error. Found PROPVALUE section outside of library.");
     return;
@@ -1043,7 +944,7 @@ void GDSIIBinaryReader::ReadSection_PROPVALUE(Record &_record) {
   //p_activeItem->readingProperty = false;
 }
 
-void GDSIIBinaryReader::ReadSection_BOX(Record &_record) {
+void GDSIIASCIIReader::ReadSection_BOX(Record &_record) {
   if (!p_activeLibrary) {
     //MessageManager::Get()->PushError("Format error. Found BOX section outside of library.");
     return;
@@ -1064,7 +965,7 @@ void GDSIIBinaryReader::ReadSection_BOX(Record &_record) {
   p_activeElement->items.push_back(p_activeItem);
 }
 
-void GDSIIBinaryReader::ReadSection_BOXTYPE(Record &_record) {
+void GDSIIASCIIReader::ReadSection_BOXTYPE(Record &_record) {
   if (!p_activeLibrary) {
     //MessageManager::Get()->PushError("Format error. Found BOXTYPE section outside of library.");
     return;
@@ -1084,24 +985,24 @@ void GDSIIBinaryReader::ReadSection_BOXTYPE(Record &_record) {
 
   __int16 type = 0;
   file.read(reinterpret_cast<char *>(&type), sizeof(__int16));
-  Normalize_WORD(type);
+  //Normalize_WORD(type);
 
   static_cast<GeometryItem_Box *>(p_activeItem)->boxType = type;
 }
 
-//void GDSIIBinaryReader::ReadSection_PLEX(Record &_record) {}
-//void GDSIIBinaryReader::ReadSection_BGNEXTN(Record &_record) {}
-//void GDSIIBinaryReader::ReadSection_ENDTEXTN(Record &_record) {}
-//void GDSIIBinaryReader::ReadSection_TAPENUM(Record &_record) {}
-//void GDSIIBinaryReader::ReadSection_TAPECODE(Record &_record) {}
-//void GDSIIBinaryReader::ReadSection_STRCLASS(Record &_record) {}
-//void GDSIIBinaryReader::ReadSection_RESERVED(Record &_record) {}
-//void GDSIIBinaryReader::ReadSection_FORMAT(Record &_record) {}
-//void GDSIIBinaryReader::ReadSection_MASK(Record &_record) {}
-//void GDSIIBinaryReader::ReadSection_ENDMASK(Record &_record) {}
-//void GDSIIBinaryReader::ReadSection_LIBDIRSIZE(Record &_record) {}
-//void GDSIIBinaryReader::ReadSection_SRFNAME(Record &_record) {}
-//void GDSIIBinaryReader::ReadSection_LIBSECUR(Record &_record) {}
+//void GDSIIASCIIReader::ReadSection_PLEX(Record &_record) {}
+//void GDSIIASCIIReader::ReadSection_BGNEXTN(Record &_record) {}
+//void GDSIIASCIIReader::ReadSection_ENDTEXTN(Record &_record) {}
+//void GDSIIASCIIReader::ReadSection_TAPENUM(Record &_record) {}
+//void GDSIIASCIIReader::ReadSection_TAPECODE(Record &_record) {}
+//void GDSIIASCIIReader::ReadSection_STRCLASS(Record &_record) {}
+//void GDSIIASCIIReader::ReadSection_RESERVED(Record &_record) {}
+//void GDSIIASCIIReader::ReadSection_FORMAT(Record &_record) {}
+//void GDSIIASCIIReader::ReadSection_MASK(Record &_record) {}
+//void GDSIIASCIIReader::ReadSection_ENDMASK(Record &_record) {}
+//void GDSIIASCIIReader::ReadSection_LIBDIRSIZE(Record &_record) {}
+//void GDSIIASCIIReader::ReadSection_SRFNAME(Record &_record) {}
+//void GDSIIASCIIReader::ReadSection_LIBSECUR(Record &_record) {}
 
 
 
@@ -1111,7 +1012,7 @@ void GDSIIBinaryReader::ReadSection_BOXTYPE(Record &_record) {
 
 
 
-bool GDSIIBinaryReader::ResolveReferences() {
+bool GDSIIASCIIReader::ResolveReferences() {
   GeometryItem_StructureRef  *p_strRef = nullptr;
   //GDSII_ArrayRef     *p_arrRef = nullptr;
   bool                refFound = false;

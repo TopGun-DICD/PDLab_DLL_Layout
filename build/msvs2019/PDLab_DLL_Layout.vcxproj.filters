@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\Readers">
+      <UniqueIdentifier>{9c24df89-7d71-43cd-90fc-b2c0c3ff5423}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Readers">
+      <UniqueIdentifier>{2b58a936-70dd-44be-9336-10e3c3bf2d3b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="PDLab_DLL_Layout.def">
@@ -26,8 +32,14 @@
     <ClCompile Include="..\..\sources\LayoutReader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\sources\LayoutReader_GDSIIascii.cpp">
+      <Filter>Source Files\Readers</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\sources\LayoutReader_GDSIIbin.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Readers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\sources\LayoutReader_MSK.cpp">
+      <Filter>Source Files\Readers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -36,6 +48,15 @@
     </ClInclude>
     <ClInclude Include="..\..\sources\LayoutReader.hpp">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\sources\LayoutReader_MSK.hpp">
+      <Filter>Header Files\Readers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\sources\LayoutReader_GDSIIascii.hpp">
+      <Filter>Header Files\Readers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\sources\LayoutReader_GDSIIbin.hpp">
+      <Filter>Header Files\Readers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

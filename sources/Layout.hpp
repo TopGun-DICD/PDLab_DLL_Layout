@@ -87,6 +87,8 @@ struct GeometryItem_StructureRef : public GeometryItem {
 struct Element {
   std::string                 name;
   std::vector<GeometryItem *> items;
+  Coord                       min,
+                              max;
 };
 
 struct Layer {
@@ -100,6 +102,8 @@ struct Library {
   Units                       units;
   std::vector<Element *>      elements;
   std::vector<Layer>          layers;
+  Coord                       min,
+                              max;
 };
 
 struct Layout {
