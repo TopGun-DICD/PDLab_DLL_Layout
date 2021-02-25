@@ -35,3 +35,8 @@ bin/PDLab_DLL_Layout.pdb
 bin/PDLab_DLL_Layout.exp
 build/msvs2019/.vs/
 build/msvs2019/x64/
+bin/PDLab_DLL_Layout.iobj
+bin/PDLab_DLL_Layout.ipdb
+bin/PDLab_DLL_Layoutd.exp
+bin/PDLab_DLL_Layoutd.ilk
+bin/PDLab_DLL_Layoutd.pdb

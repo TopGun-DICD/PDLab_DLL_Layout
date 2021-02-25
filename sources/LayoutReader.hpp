@@ -6,6 +6,8 @@
 
 #include "Layout.hpp"
 
+// https://github.com/klayoutmatthias/dump_oas_gds2
+
 class AbstractLayoutReader {
 protected:
   std::wstring  fileName;

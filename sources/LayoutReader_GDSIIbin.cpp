@@ -2,6 +2,9 @@
 
 #include <ctime>
 
+#pragma warning(disable: 26451) // Warning C26451 Arithmetic overflow : Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. 
+                                // Cast the value to the wider type before calling operator '+' to avoid overflow(io.2).
+
 
 // [1] http://boolean.klaasholwerda.nl/interface/bnf/gdsformat.html#recordover
 // [2] https://github.com/HomerReid/libGDSII/blob/master/lib/ReadGDSIIFile.cc
@@ -84,6 +87,16 @@ struct DateTime {
           hour,
           minute,
           second;
+};
+
+enum class DataType {
+  noData = 0,
+  bitArray,
+  WORD,
+  DWORD,
+  REAL,
+  DOUBLE,
+  ASCIISTRING,
 };
 
 // To access bits of a bit array
@@ -368,25 +381,6 @@ void GDSIIBinaryReader::ReadSection_ENDLIBRARY(Record &_record) {
   //file.seekg(_record.length, std::ios_base::cur);
   // Nothing to do
 
-  if (!p_activeLibrary->elements.size()) {
-    p_activeLibrary = nullptr;
-    return;
-  }
-
-  p_activeLibrary->min = p_activeLibrary->elements[0]->min;
-  p_activeLibrary->max = p_activeLibrary->elements[0]->max;
-
-  for (size_t i = 0; i < p_activeLibrary->elements.size(); ++i) {
-    if (p_activeLibrary->min.x > p_activeLibrary->elements[i]->min.x)
-      p_activeLibrary->min.x = p_activeLibrary->elements[i]->min.x;
-    if (p_activeLibrary->min.y > p_activeLibrary->elements[i]->min.y)
-      p_activeLibrary->min.y = p_activeLibrary->elements[i]->min.y;
-    if (p_activeLibrary->max.x > p_activeLibrary->elements[i]->max.x)
-      p_activeLibrary->max.x = p_activeLibrary->elements[i]->max.x;
-    if (p_activeLibrary->max.y > p_activeLibrary->elements[i]->max.y)
-      p_activeLibrary->max.y = p_activeLibrary->elements[i]->max.y;
-  }
-
   p_activeLibrary = nullptr;
 }
 
@@ -405,6 +399,7 @@ void GDSIIBinaryReader::ReadSection_BEGINSTRUCTURE(Record &_record) {
   }
 
   p_activeElement = new Element;
+  p_activeElement->nested = false;
   p_activeLibrary->elements.push_back(p_activeElement);
 
   DateTime lastTimeModified, lastTimeAccessed;
@@ -469,7 +464,7 @@ void GDSIIBinaryReader::ReadSection_ENDSTRUCTURE(Record &_record) {
   p_activeElement->max = p_activeElement->min;
 
   for (size_t i = 0; i < p_activeElement->items.size(); ++i) {
-    if (p_activeElement->items[i]->type == ItemType::structRef)
+    if (p_activeElement->items[i]->type == GeometryType::reference)
       continue;
     for (size_t j = 0; j < p_activeElement->items[i]->coords.size(); ++j) {
       if (p_activeElement->min.x > p_activeElement->items[i]->coords[j].x)
@@ -500,10 +495,10 @@ void GDSIIBinaryReader::ReadSection_BOUNDARY(Record &_record) {
     return;
   }
 
-  p_activeItem = new GeometryItem_Boundary;
-  p_activeItem->type = ItemType::boundary;
+  p_activeItem = new Geometry_Polygon;
+  p_activeItem->type = GeometryType::polygon;
   p_activeItem->layer = -1;
-  static_cast<GeometryItem_Boundary *>(p_activeItem)->dataType = 0;
+  static_cast<Geometry_Polygon *>(p_activeItem)->dataType = 0;
   p_activeElement->items.push_back(p_activeItem);
 }
 
@@ -521,12 +516,12 @@ void GDSIIBinaryReader::ReadSection_PATH(Record &_record) {
     return;
   }
 
-  p_activeItem = new GeometryItem_Path;
-  p_activeItem->type = ItemType::path;
+  p_activeItem = new Geometry_Path;
+  p_activeItem->type = GeometryType::path;
   p_activeItem->layer = -1;
-  static_cast<GeometryItem_Path *>(p_activeItem)->dataType = 0;
-  static_cast<GeometryItem_Path *>(p_activeItem)->pathType = 0;
-  static_cast<GeometryItem_Path *>(p_activeItem)->width = 0;
+  static_cast<Geometry_Path *>(p_activeItem)->dataType = 0;
+  static_cast<Geometry_Path *>(p_activeItem)->pathType = 0;
+  static_cast<Geometry_Path *>(p_activeItem)->width = 0;
 
   p_activeElement->items.push_back(p_activeItem);
 }
@@ -545,13 +540,13 @@ void GDSIIBinaryReader::ReadSection_SREF(Record &_record) {
     return;
   }
 
-  p_activeItem = new GeometryItem_StructureRef;
-  p_activeItem->type = ItemType::structRef;
+  p_activeItem = new Geometry_Reference;
+  p_activeItem->type = GeometryType::reference;
   p_activeItem->layer = -1;
-  static_cast<GeometryItem_StructureRef *>(p_activeItem)->name.erase();
-  static_cast<GeometryItem_StructureRef *>(p_activeItem)->pReference = nullptr;
-  static_cast<GeometryItem_StructureRef *>(p_activeItem)->transformationFlags = 0;
-  static_cast<GeometryItem_StructureRef *>(p_activeItem)->magnification = 1.0;
+  static_cast<Geometry_Reference *>(p_activeItem)->name.erase();
+  static_cast<Geometry_Reference *>(p_activeItem)->referenceTo = nullptr;
+  static_cast<Geometry_Reference *>(p_activeItem)->transformationFlags = 0;
+  static_cast<Geometry_Reference *>(p_activeItem)->magnification = 1.0;
 
   p_activeElement->items.push_back(p_activeItem);
 }
@@ -572,15 +567,15 @@ void GDSIIBinaryReader::ReadSection_TEXT(Record &_record) {
     return;
   }
 
-  p_activeItem = new GeometryItem_Text;
-  p_activeItem->type = ItemType::text;
+  p_activeItem = new Geometry_Text;
+  p_activeItem->type = GeometryType::text;
   p_activeItem->layer = -1;
-  static_cast<GeometryItem_Text *>(p_activeItem)->textType = 0;
-  static_cast<GeometryItem_Text *>(p_activeItem)->flagsPresentation = 0;
-  static_cast<GeometryItem_Text *>(p_activeItem)->flagsTransformation = 0;
-  static_cast<GeometryItem_Text *>(p_activeItem)->pathType = 0;
-  static_cast<GeometryItem_Text *>(p_activeItem)->width = 0;
-  static_cast<GeometryItem_Text *>(p_activeItem)->magnification = 1.0;
+  static_cast<Geometry_Text *>(p_activeItem)->textType = 0;
+  static_cast<Geometry_Text *>(p_activeItem)->flagsPresentation = 0;
+  static_cast<Geometry_Text *>(p_activeItem)->flagsTransformation = 0;
+  static_cast<Geometry_Text *>(p_activeItem)->pathType = 0;
+  static_cast<Geometry_Text *>(p_activeItem)->width = 0;
+  static_cast<Geometry_Text *>(p_activeItem)->magnification = 1.0;
   p_activeElement->items.push_back(p_activeItem);
 }
 
@@ -621,11 +616,11 @@ void GDSIIBinaryReader::ReadSection_DATATYPE(Record &_record) {
   Normalize_WORD(dataType);
 
   switch (p_activeItem->type) {
-    case ItemType::boundary:
-      static_cast<GeometryItem_Boundary *>(p_activeItem)->dataType = dataType;
+    case GeometryType::polygon:
+      static_cast<Geometry_Polygon *>(p_activeItem)->dataType = dataType;
       break;
-    case ItemType::path:
-      static_cast<GeometryItem_Path *>(p_activeItem)->dataType = dataType;
+    case GeometryType::path:
+      static_cast<Geometry_Path *>(p_activeItem)->dataType = dataType;
       break;
     default:
       ;
@@ -652,11 +647,11 @@ void GDSIIBinaryReader::ReadSection_WIDTH(Record &_record) {
   Normalize_DWORD(width);
 
   switch (p_activeItem->type) {
-    case ItemType::path:
-      static_cast<GeometryItem_Path *>(p_activeItem)->width = width;
+    case GeometryType::path:
+      static_cast<Geometry_Path *>(p_activeItem)->width = width;
       break;
-    case ItemType::text:
-      static_cast<GeometryItem_Text *>(p_activeItem)->width = width;
+    case GeometryType::text:
+      static_cast<Geometry_Text *>(p_activeItem)->width = width;
       break;
     default:
       ;
@@ -680,17 +675,17 @@ void GDSIIBinaryReader::ReadSection_XY(Record &_record) {
 
   int numberOfCoors = _record.length / sizeof(Coord);
 
-  GeometryItem_Boundary      *p_boundary = nullptr;
-  GeometryItem_Path          *p_path = nullptr;
-  GeometryItem_Box           *p_box = nullptr;
-  GeometryItem_StructureRef  *p_structRef = nullptr;
-  GeometryItem_Text          *p_text = nullptr;
-  Coord                       coord;
-  int                         i = 0;
+  Geometry_Polygon   *p_boundary  = nullptr;
+  Geometry_Path      *p_path      = nullptr;
+  Geometry_Box       *p_box       = nullptr;
+  Geometry_Reference *p_reference = nullptr;
+  Geometry_Text      *p_text      = nullptr;
+  Coord               coord = {0, 0};
+  int                 i = 0;
 
   switch (p_activeItem->type) {
-    case ItemType::boundary:
-      p_boundary = static_cast<GeometryItem_Boundary *>(p_activeItem);
+    case GeometryType::polygon:
+      p_boundary = static_cast<Geometry_Polygon *>(p_activeItem);
       p_boundary->coords.resize(numberOfCoors);
       for (i = 0; i < numberOfCoors; ++i) {
         file.read(reinterpret_cast<char *>(&coord), sizeof(Coord));
@@ -701,8 +696,8 @@ void GDSIIBinaryReader::ReadSection_XY(Record &_record) {
         p_boundary->coords[i] = coord;
       }
       break;
-    case ItemType::path:
-      p_path = static_cast<GeometryItem_Path *>(p_activeItem);
+    case GeometryType::path:
+      p_path = static_cast<Geometry_Path *>(p_activeItem);
       p_path->coords.resize(numberOfCoors);
       for (i = 0; i < numberOfCoors; ++i) {
         file.read(reinterpret_cast<char *>(&coord), sizeof(Coord));
@@ -713,8 +708,8 @@ void GDSIIBinaryReader::ReadSection_XY(Record &_record) {
         p_path->coords[i] = coord;
       }
       break;
-    case ItemType::box:
-      p_box = static_cast<GeometryItem_Box *>(p_activeItem);
+    case GeometryType::box:
+      p_box = static_cast<Geometry_Box *>(p_activeItem);
       p_box->coords.resize(numberOfCoors);
       for (i = 0; i < numberOfCoors; ++i) {
         file.read(reinterpret_cast<char *>(&coord), sizeof(Coord));
@@ -725,17 +720,17 @@ void GDSIIBinaryReader::ReadSection_XY(Record &_record) {
         p_box->coords[i] = coord;
       }
       break;
-    case ItemType::structRef:
-      p_structRef = static_cast<GeometryItem_StructureRef *>(p_activeItem);
+    case GeometryType::reference:
+      p_reference = static_cast<Geometry_Reference *>(p_activeItem);
 
       file.read(reinterpret_cast<char *>(&coord), sizeof(Coord));
       Normalize_DWORD(coord.x);
       Normalize_DWORD(coord.y);
 
-      p_structRef->coords.push_back(coord);
+      p_reference->coords.push_back(coord);
       break;
-    case ItemType::text:
-      p_text = static_cast<GeometryItem_Text *>(p_activeItem);
+    case GeometryType::text:
+      p_text = static_cast<Geometry_Text *>(p_activeItem);
 
       file.read(reinterpret_cast<char *>(&coord), sizeof(Coord));
       Normalize_DWORD(coord.x);
@@ -779,7 +774,7 @@ void GDSIIBinaryReader::ReadSection_SNAME(Record &_record) {
     //MessageManager::Get()->PushError("Format error. Found SNAME section outside of element.");
     return;
   }
-  if (p_activeItem->type != ItemType::structRef) {
+  if (p_activeItem->type != GeometryType::reference) {
     //MessageManager::Get()->PushError("Format error. Found SNAME section given for inproper type of element.");
     return;
   }
@@ -787,7 +782,7 @@ void GDSIIBinaryReader::ReadSection_SNAME(Record &_record) {
   char *str = new char[_record.length + 1];
   memset(str, 0, _record.length + 1);
   file.read(str, _record.length);
-  static_cast<GeometryItem_StructureRef *>(p_activeItem)->name = str;
+  static_cast<Geometry_Reference *>(p_activeItem)->name = str;
   delete[] str;
   str = nullptr;
 }
@@ -809,7 +804,7 @@ void GDSIIBinaryReader::ReadSection_TEXTTYPE(Record &_record) {
     //MessageManager::Get()->PushError("Format error. Found TEXTTYPE section outside of element.");
     return;
   }
-  if (p_activeItem->type != ItemType::text) {
+  if (p_activeItem->type != GeometryType::text) {
     //MessageManager::Get()->PushError("Format error. Found TEXTTYPE section given for inproper type of element.");
     return;
   }
@@ -818,7 +813,7 @@ void GDSIIBinaryReader::ReadSection_TEXTTYPE(Record &_record) {
   file.read(reinterpret_cast<char *>(&type), sizeof(__int16));
   Normalize_WORD(type);
 
-  static_cast<GeometryItem_Text *>(p_activeItem)->textType = type;
+  static_cast<Geometry_Text *>(p_activeItem)->textType = type;
 }
 
 void GDSIIBinaryReader::ReadSection_PRESENTATION(Record &_record) {
@@ -834,7 +829,7 @@ void GDSIIBinaryReader::ReadSection_PRESENTATION(Record &_record) {
     //MessageManager::Get()->PushError("Format error. Found PRESENTATION section outside of element.");
     return;
   }
-  if (p_activeItem->type != ItemType::text) {
+  if (p_activeItem->type != GeometryType::text) {
     //MessageManager::Get()->PushError("Format error. Found PRESENTATION section given for inproper type of element.");
     return;
   }
@@ -843,7 +838,7 @@ void GDSIIBinaryReader::ReadSection_PRESENTATION(Record &_record) {
   file.read(reinterpret_cast<char *>(&flags), sizeof(__int16));
   Normalize_WORD(flags);
 
-  static_cast<GeometryItem_Text *>(p_activeItem)->flagsPresentation = flags;
+  static_cast<Geometry_Text *>(p_activeItem)->flagsPresentation = flags;
 }
 
 // UNUSED
@@ -861,7 +856,7 @@ void GDSIIBinaryReader::ReadSection_STRING(Record &_record) {
     //MessageManager::Get()->PushError("Format error. Found STRING section outside of element.");
     return;
   }
-  if (p_activeItem->type != ItemType::text) {
+  if (p_activeItem->type != GeometryType::text) {
     //MessageManager::Get()->PushError("Format error. Found STRING section given for inproper type of element.");
     return;
   }
@@ -869,7 +864,7 @@ void GDSIIBinaryReader::ReadSection_STRING(Record &_record) {
   char *str = new char[_record.length + 1];
   memset(str, 0, _record.length + 1);
   file.read(str, _record.length);
-  static_cast<GeometryItem_Text *>(p_activeItem)->stringValue = str;
+  static_cast<Geometry_Text *>(p_activeItem)->stringValue = str;
   delete[] str;
   str = nullptr;
 }
@@ -893,14 +888,14 @@ void GDSIIBinaryReader::ReadSection_STRANS(Record &_record) {
   Normalize_WORD(flags);
 
   switch (p_activeItem->type) {
-    case ItemType::structRef:
+    case GeometryType::reference:
       //static_cast<GDSII_StructureRef *>(p_activeItem)-> = flags;
       break;
     //case it_arrayRef:
       //static_cast<GDSII_ArrayRef *>(p_activeItem)-> = flags;
       //break;
-    case ItemType::text:
-      static_cast<GeometryItem_Text *>(p_activeItem)->flagsTransformation = flags;
+    case GeometryType::text:
+      static_cast<Geometry_Text *>(p_activeItem)->flagsTransformation = flags;
       break;
     default:
       ;
@@ -927,14 +922,14 @@ void GDSIIBinaryReader::ReadSection_MAG(Record &_record) {
   Normalize_DOUBLE(mag);
 
   switch (p_activeItem->type) {
-    case ItemType::structRef:
-      static_cast<GeometryItem_StructureRef *>(p_activeItem)->magnification = mag;
+    case GeometryType::reference:
+      static_cast<Geometry_Reference *>(p_activeItem)->magnification = mag;
       break;
     //case et_arrayRef:
       //static_cast<GDSII_ArrayRef *>(p_activeItem)->magnification = mag;
       //break;
-    case ItemType::text:
-      static_cast<GeometryItem_Text *>(p_activeItem)->magnification = mag;
+    case GeometryType::text:
+      static_cast<Geometry_Text *>(p_activeItem)->magnification = mag;
       break;
     default:
       ;
@@ -967,11 +962,11 @@ void GDSIIBinaryReader::ReadSection_PATHTYPE(Record &_record) {
   Normalize_WORD(type);
 
   switch (p_activeItem->type) {
-    case ItemType::path:
-      static_cast<GeometryItem_Path *>(p_activeItem)->pathType = type;
+    case GeometryType::path:
+      static_cast<Geometry_Path *>(p_activeItem)->pathType = type;
       break;
-    case ItemType::text:
-      static_cast<GeometryItem_Text *>(p_activeItem)->pathType = type;
+    case GeometryType::text:
+      static_cast<Geometry_Text *>(p_activeItem)->pathType = type;
       break;
     default:
       ;
@@ -1057,10 +1052,10 @@ void GDSIIBinaryReader::ReadSection_BOX(Record &_record) {
     return;
   }
 
-  p_activeItem = new GeometryItem_Box;
-  p_activeItem->type = ItemType::box;
+  p_activeItem = new Geometry_Box;
+  p_activeItem->type = GeometryType::box;
   p_activeItem->layer = -1;
-  static_cast<GeometryItem_Box *>(p_activeItem)->boxType = 0;
+  static_cast<Geometry_Box *>(p_activeItem)->boxType = 0;
   p_activeElement->items.push_back(p_activeItem);
 }
 
@@ -1077,7 +1072,7 @@ void GDSIIBinaryReader::ReadSection_BOXTYPE(Record &_record) {
     //MessageManager::Get()->PushError("Format error. Found BOXTYPE section outside of element.");
     return;
   }
-  if (p_activeItem->type != ItemType::box) {
+  if (p_activeItem->type != GeometryType::box) {
     //MessageManager::Get()->PushError("Format error. Found BOXTYPE section given for wrong type of element.");
     return;
   }
@@ -1086,7 +1081,7 @@ void GDSIIBinaryReader::ReadSection_BOXTYPE(Record &_record) {
   file.read(reinterpret_cast<char *>(&type), sizeof(__int16));
   Normalize_WORD(type);
 
-  static_cast<GeometryItem_Box *>(p_activeItem)->boxType = type;
+  static_cast<Geometry_Box *>(p_activeItem)->boxType = type;
 }
 
 //void GDSIIBinaryReader::ReadSection_PLEX(Record &_record) {}
@@ -1103,31 +1098,23 @@ void GDSIIBinaryReader::ReadSection_BOXTYPE(Record &_record) {
 //void GDSIIBinaryReader::ReadSection_SRFNAME(Record &_record) {}
 //void GDSIIBinaryReader::ReadSection_LIBSECUR(Record &_record) {}
 
-
-
-
-
-
-
-
-
 bool GDSIIBinaryReader::ResolveReferences() {
-  GeometryItem_StructureRef  *p_strRef = nullptr;
-  //GDSII_ArrayRef     *p_arrRef = nullptr;
-  bool                refFound = false;
+  Geometry_Reference  *p_reference = nullptr;
+  bool                 refFound = false;
 
   // Structure references
   for (size_t i = 0; i < p_data->libraries.size(); ++i)
     for (size_t j = 0; j < p_data->libraries[i]->elements.size(); ++j)
       for (size_t k = 0; k < p_data->libraries[i]->elements[j]->items.size(); ++k) {
-        if (p_data->libraries[i]->elements[j]->items[k]->type != ItemType::structRef)
+        if (p_data->libraries[i]->elements[j]->items[k]->type != GeometryType::reference)
           continue;
-        p_strRef = static_cast<GeometryItem_StructureRef *>(p_data->libraries[i]->elements[j]->items[k]);
+        p_reference = static_cast<Geometry_Reference *>(p_data->libraries[i]->elements[j]->items[k]);
         refFound = false;
         for (size_t l = 0; l < p_data->libraries.size() && !refFound; ++l)
           for (size_t m = 0; m < p_data->libraries[l]->elements.size() && !refFound; ++m) {
-            if (p_data->libraries[l]->elements[m]->name == p_strRef->name) {
-              p_strRef->pReference = p_data->libraries[l]->elements[m];
+            if (p_data->libraries[l]->elements[m]->name == p_reference->name) {
+              p_reference->referenceTo = p_data->libraries[l]->elements[m];
+              p_data->libraries[l]->elements[m]->nested = true;
               refFound = true;
               break;
             }
@@ -1136,35 +1123,13 @@ bool GDSIIBinaryReader::ResolveReferences() {
           return false;
       }
 
-  /*// Array references
-  for (size_t i = 0; i < p_data->libraries.size(); ++i)
-    for (size_t j = 0; j < p_data->libraries[i]->structures.size(); ++j)
-      for (size_t k = 0; k < p_data->libraries[i]->structures[j]->elements.size(); ++k) {
-        if (p_data->libraries[i]->structures[j]->elements[k]->type != et_arrayRef)
-          continue;
-
-        p_arrRef = static_cast<GDSII_ArrayRef *>(p_data->libraries[i]->structures[j]->elements[k]);
-        refFound = false;
-
-        //TODO: push error message to inform ythat array references are not supported yet
-        /*
-        for (size_t k = 0; k < p_data->libraries.size() && !refFound; ++k)
-          for (size_t l = 0; l < p_data->libraries[k]->structures.size() && !refFound; ++l) {
-            if (p_data->libraries[k]->structures[l]->name == p_strRef->name) {
-              p_strRef->p_ref = p_data->libraries[k]->structures[l];
-              refFound = true;
-              break;
-            }
-          }
-        */
-      //}
-
+  // Filling library->layers information
   Library *p_lib = nullptr;
   for (size_t i = 0; i < p_data->libraries.size(); ++i) {
     p_lib = p_data->libraries[i];
     for (size_t j = 0; j < p_lib->elements.size(); ++j) {
       for (size_t k = 0; k < p_lib->elements[j]->items.size(); ++k) {
-        if (p_lib->elements[j]->items[k]->type == ItemType::structRef)
+        if (p_lib->elements[j]->items[k]->type == GeometryType::reference)
           continue;
         int layer = p_lib->elements[j]->items[k]->layer;
         size_t l = 0;
@@ -1180,6 +1145,27 @@ bool GDSIIBinaryReader::ResolveReferences() {
         li.items.push_back(p_lib->elements[j]->items[k]);
         p_lib->layers.push_back(li);
       }
+    }
+  }
+
+  // Calculate bounding box for the library based on bounding boxes of the elements that are not nested
+  for (size_t i = 0; i < p_data->libraries.size(); ++i) {
+    
+    for (size_t j = 0; j < p_data->libraries[i]->elements.size(); ++j) {
+      if (p_data->libraries[i]->elements[j]->nested)
+        continue;
+
+      p_data->libraries[i]->min = p_data->libraries[i]->elements[j]->min;
+      p_data->libraries[i]->max = p_data->libraries[i]->elements[j]->max;
+
+      if (p_data->libraries[i]->min.x > p_data->libraries[i]->elements[j]->min.x)
+        p_data->libraries[i]->min.x = p_data->libraries[i]->elements[j]->min.x;
+      if (p_data->libraries[i]->min.y > p_data->libraries[i]->elements[j]->min.y)
+        p_data->libraries[i]->min.y = p_data->libraries[i]->elements[j]->min.y;
+      if (p_data->libraries[i]->max.x > p_data->libraries[i]->elements[j]->max.x)
+        p_data->libraries[i]->max.x = p_data->libraries[i]->elements[j]->max.x;
+      if (p_data->libraries[i]->max.y > p_data->libraries[i]->elements[j]->max.y)
+        p_data->libraries[i]->max.y = p_data->libraries[i]->elements[j]->max.y;
     }
   }
 

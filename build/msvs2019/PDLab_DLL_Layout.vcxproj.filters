@@ -41,6 +41,9 @@
     <ClCompile Include="..\..\sources\LayoutReader_MSK.cpp">
       <Filter>Source Files\Readers</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\sources\LayoutReader_OASIS.cpp">
+      <Filter>Source Files\Readers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\sources\Layout.hpp">
@@ -56,6 +59,9 @@
       <Filter>Header Files\Readers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\sources\LayoutReader_GDSIIbin.hpp">
+      <Filter>Header Files\Readers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\sources\LayoutReader_OASIS.hpp">
       <Filter>Header Files\Readers</Filter>
     </ClInclude>
   </ItemGroup>

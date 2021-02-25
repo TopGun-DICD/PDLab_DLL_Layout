@@ -5,9 +5,9 @@
 
 struct Record;
 class GDSIIBinaryReader : public AbstractLayoutReader {
-  Library      *p_activeLibrary;
-  Element      *p_activeElement;
-  GeometryItem *p_activeItem;
+  Library  *p_activeLibrary;
+  Element  *p_activeElement;
+  Geometry *p_activeItem;
 public:
   GDSIIBinaryReader();
 public:
