@@ -163,14 +163,19 @@
     <ClCompile Include="..\..\sources\LayoutReader_GDSIIbin.cpp" />
     <ClCompile Include="..\..\sources\LayoutReader_MSK.cpp" />
     <ClCompile Include="..\..\sources\LayoutReader_OASIS.cpp" />
+    <ClCompile Include="..\..\sources\LayoutWriter.cpp" />
+    <ClCompile Include="..\..\sources\LayoutWriter_GDSIIbin.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\sources\GDSIITypes.hpp" />
     <ClInclude Include="..\..\sources\Layout.hpp" />
     <ClInclude Include="..\..\sources\LayoutReader.hpp" />
     <ClInclude Include="..\..\sources\LayoutReader_GDSIIascii.hpp" />
     <ClInclude Include="..\..\sources\LayoutReader_GDSIIbin.hpp" />
     <ClInclude Include="..\..\sources\LayoutReader_MSK.hpp" />
     <ClInclude Include="..\..\sources\LayoutReader_OASIS.hpp" />
+    <ClInclude Include="..\..\sources\LayoutWriter.hpp" />
+    <ClInclude Include="..\..\sources\LayoutWriter_GDSIIbin.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

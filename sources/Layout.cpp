@@ -1,5 +1,6 @@
 #include "Layout.hpp"
 #include "LayoutReader.hpp"
+#include "LayoutWriter.hpp"
 
 __declspec(dllexport) Layout *CreateLayoutFromFile(std::wstring fileName) {
   AbstractLayoutReader *p_reader = GetReader(fileName);
@@ -235,6 +236,19 @@ __declspec(dllexport) void CopyLayout(Layout *src, Layout *dst) {
     }
   }
 
+}
+
+__declspec(dllexport) bool WriteLayout(Layout *layout, std::wstring fileName, FileFormat format) {
+  AbstractLayoutWriter *p_writer = GetWriter(format);
+
+  if (!p_writer)
+    return false;
+
+  bool retCode = p_writer->Write(fileName, layout);
+
+  delete p_writer;
+  p_writer = nullptr;
+  return retCode;
 }
 
 __declspec(dllexport) void FreeLayout(Layout **layout) {

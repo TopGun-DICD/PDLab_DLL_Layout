@@ -19,6 +19,12 @@
     <Filter Include="Source Files\Readers">
       <UniqueIdentifier>{2b58a936-70dd-44be-9336-10e3c3bf2d3b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Writers">
+      <UniqueIdentifier>{66b75b48-0b72-48f6-802f-e6996b5a86c5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Writers">
+      <UniqueIdentifier>{e03a7600-5150-4ccb-adda-7aa250e9db2b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="PDLab_DLL_Layout.def">
@@ -44,6 +50,12 @@
     <ClCompile Include="..\..\sources\LayoutReader_OASIS.cpp">
       <Filter>Source Files\Readers</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\sources\LayoutWriter_GDSIIbin.cpp">
+      <Filter>Source Files\Writers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\sources\LayoutWriter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\sources\Layout.hpp">
@@ -63,6 +75,15 @@
     </ClInclude>
     <ClInclude Include="..\..\sources\LayoutReader_OASIS.hpp">
       <Filter>Header Files\Readers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\sources\LayoutWriter.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\sources\LayoutWriter_GDSIIbin.hpp">
+      <Filter>Header Files\Writers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\sources\GDSIITypes.hpp">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

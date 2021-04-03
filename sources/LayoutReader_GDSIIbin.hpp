@@ -2,8 +2,8 @@
 
 #include "Layout.hpp"
 #include "LayoutReader.hpp"
+#include "GDSIITypes.hpp"
 
-struct Record;
 class GDSIIBinaryReader : public AbstractLayoutReader {
   Library  *p_activeLibrary;
   Element  *p_activeElement;
