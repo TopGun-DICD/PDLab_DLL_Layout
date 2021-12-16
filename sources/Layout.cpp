@@ -73,11 +73,11 @@ __declspec(dllexport) void CopyLayout(Layout *src, Layout *dst) {
   dst->fileName = src->fileName;
   dst->fileFormat = src->fileFormat;
 
-  Geometry_Polygon   *p_polygon = nullptr;
-  Geometry_Path      *p_path    = nullptr;
-  Geometry_Text      *p_text    = nullptr;
-  Geometry_Box       *p_box     = nullptr;
-  Geometry_Reference *p_ref     = nullptr;
+  Polygon   *p_polygon = nullptr;
+  Path      *p_path    = nullptr;
+  Text      *p_text    = nullptr;
+  Rectangle *p_rect    = nullptr;
+  Reference *p_ref     = nullptr;
   
   for (size_t i = 0; i < src->libraries.size(); ++i) {
     Library *p_lib = new Library;
@@ -94,7 +94,7 @@ __declspec(dllexport) void CopyLayout(Layout *src, Layout *dst) {
       for (size_t k = 0; k < src->libraries[i]->elements[j]->items.size(); ++k) {
         switch (src->libraries[i]->elements[j]->items[k]->type) {
           case GeometryType::polygon:
-            p_polygon = new Geometry_Polygon;
+            p_polygon = new Polygon;
             dst->libraries[i]->elements[j]->items.push_back(p_polygon);
             p_polygon->type = GeometryType::polygon;
             p_polygon->layer = src->libraries[i]->elements[j]->items[k]->layer;
@@ -102,21 +102,21 @@ __declspec(dllexport) void CopyLayout(Layout *src, Layout *dst) {
               p_polygon->properties.push_back(src->libraries[i]->elements[j]->items[k]->properties[l]);
             for (size_t l = 0; l < src->libraries[i]->elements[j]->items[k]->coords.size(); ++l)
               p_polygon->coords.push_back(src->libraries[i]->elements[j]->items[k]->coords[l]);
-            p_polygon->dataType = static_cast<Geometry_Polygon *>(src->libraries[i]->elements[j]->items[k])->dataType;
+            p_polygon->dataType = static_cast<Polygon *>(src->libraries[i]->elements[j]->items[k])->dataType;
             break;
-          case GeometryType::box:
-            p_box = new Geometry_Box;
-            dst->libraries[i]->elements[j]->items.push_back(p_box);
-            p_box->type = GeometryType::box;
-            p_box->layer = src->libraries[i]->elements[j]->items[k]->layer;
+          case GeometryType::rectangle:
+            p_rect = new Rectangle;
+            dst->libraries[i]->elements[j]->items.push_back(p_rect);
+            p_rect->type = GeometryType::rectangle;
+            p_rect->layer = src->libraries[i]->elements[j]->items[k]->layer;
             for (size_t l = 0; l < src->libraries[i]->elements[j]->items[k]->properties.size(); ++l)
-              p_box->properties.push_back(src->libraries[i]->elements[j]->items[k]->properties[l]);
+              p_rect->properties.push_back(src->libraries[i]->elements[j]->items[k]->properties[l]);
             for (size_t l = 0; l < src->libraries[i]->elements[j]->items[k]->coords.size(); ++l)
-              p_box->coords.push_back(src->libraries[i]->elements[j]->items[k]->coords[l]);
-            p_box->boxType = static_cast<Geometry_Box *>(src->libraries[i]->elements[j]->items[k])->boxType;
+              p_rect->coords.push_back(src->libraries[i]->elements[j]->items[k]->coords[l]);
+            p_rect->boxType = static_cast<Rectangle *>(src->libraries[i]->elements[j]->items[k])->boxType;
             break;
           case GeometryType::path:
-            p_path = new Geometry_Path;
+            p_path = new Path;
             dst->libraries[i]->elements[j]->items.push_back(p_path);
             p_path->type = GeometryType::path;
             p_path->layer = src->libraries[i]->elements[j]->items[k]->layer;
@@ -124,12 +124,12 @@ __declspec(dllexport) void CopyLayout(Layout *src, Layout *dst) {
               p_path->properties.push_back(src->libraries[i]->elements[j]->items[k]->properties[l]);
             for (size_t l = 0; l < src->libraries[i]->elements[j]->items[k]->coords.size(); ++l)
               p_path->coords.push_back(src->libraries[i]->elements[j]->items[k]->coords[l]);
-            p_path->dataType = static_cast<Geometry_Path *>(src->libraries[i]->elements[j]->items[k])->dataType;
-            p_path->pathType = static_cast<Geometry_Path *>(src->libraries[i]->elements[j]->items[k])->pathType;
-            p_path->width = static_cast<Geometry_Path *>(src->libraries[i]->elements[j]->items[k])->width;
+            p_path->dataType = static_cast<Path *>(src->libraries[i]->elements[j]->items[k])->dataType;
+            p_path->pathType = static_cast<Path *>(src->libraries[i]->elements[j]->items[k])->pathType;
+            p_path->width = static_cast<Path *>(src->libraries[i]->elements[j]->items[k])->width;
             break;
           case GeometryType::text:
-            p_text = new Geometry_Text;
+            p_text = new Text;
             dst->libraries[i]->elements[j]->items.push_back(p_text);
             p_text->type = GeometryType::text;
             p_text->layer = src->libraries[i]->elements[j]->items[k]->layer;
@@ -137,16 +137,16 @@ __declspec(dllexport) void CopyLayout(Layout *src, Layout *dst) {
               p_text->properties.push_back(src->libraries[i]->elements[j]->items[k]->properties[l]);
             for (size_t l = 0; l < src->libraries[i]->elements[j]->items[k]->coords.size(); ++l)
               p_text->coords.push_back(src->libraries[i]->elements[j]->items[k]->coords[l]);
-            p_text->textType = static_cast<Geometry_Text *>(src->libraries[i]->elements[j]->items[k])->textType;
-            p_text->pathType = static_cast<Geometry_Text *>(src->libraries[i]->elements[j]->items[k])->pathType;
-            p_text->width = static_cast<Geometry_Text *>(src->libraries[i]->elements[j]->items[k])->width;
-            p_text->flagsPresentation = static_cast<Geometry_Text *>(src->libraries[i]->elements[j]->items[k])->flagsPresentation;
-            p_text->flagsTransformation = static_cast<Geometry_Text *>(src->libraries[i]->elements[j]->items[k])->flagsTransformation;
-            p_text->magnification = static_cast<Geometry_Text *>(src->libraries[i]->elements[j]->items[k])->magnification;
-            p_text->stringValue = static_cast<Geometry_Text *>(src->libraries[i]->elements[j]->items[k])->stringValue;
+            p_text->textType = static_cast<Text *>(src->libraries[i]->elements[j]->items[k])->textType;
+            p_text->pathType = static_cast<Text *>(src->libraries[i]->elements[j]->items[k])->pathType;
+            p_text->width = static_cast<Text *>(src->libraries[i]->elements[j]->items[k])->width;
+            p_text->flagsPresentation = static_cast<Text *>(src->libraries[i]->elements[j]->items[k])->flagsPresentation;
+            p_text->flagsTransformation = static_cast<Text *>(src->libraries[i]->elements[j]->items[k])->flagsTransformation;
+            p_text->magnification = static_cast<Text *>(src->libraries[i]->elements[j]->items[k])->magnification;
+            p_text->stringValue = static_cast<Text *>(src->libraries[i]->elements[j]->items[k])->stringValue;
             break;
           case GeometryType::reference:
-            p_ref = new Geometry_Reference;
+            p_ref = new Reference;
             dst->libraries[i]->elements[j]->items.push_back(p_ref);
             p_ref->type = GeometryType::reference;
             p_ref->layer = src->libraries[i]->elements[j]->items[k]->layer;
@@ -154,10 +154,10 @@ __declspec(dllexport) void CopyLayout(Layout *src, Layout *dst) {
               p_ref->properties.push_back(src->libraries[i]->elements[j]->items[k]->properties[l]);
             for (size_t l = 0; l < src->libraries[i]->elements[j]->items[k]->coords.size(); ++l)
               p_ref->coords.push_back(src->libraries[i]->elements[j]->items[k]->coords[l]);
-            p_ref->name = static_cast<Geometry_Reference *>(src->libraries[i]->elements[j]->items[k])->name;
-            p_ref->referenceTo = static_cast<Geometry_Reference *>(src->libraries[i]->elements[j]->items[k])->referenceTo;
-            p_ref->transformationFlags = static_cast<Geometry_Reference *>(src->libraries[i]->elements[j]->items[k])->transformationFlags;
-            p_ref->magnification = static_cast<Geometry_Reference *>(src->libraries[i]->elements[j]->items[k])->magnification;
+            p_ref->name = static_cast<Reference *>(src->libraries[i]->elements[j]->items[k])->name;
+            p_ref->referenceTo = static_cast<Reference *>(src->libraries[i]->elements[j]->items[k])->referenceTo;
+            p_ref->transformationFlags = static_cast<Reference *>(src->libraries[i]->elements[j]->items[k])->transformationFlags;
+            p_ref->magnification = static_cast<Reference *>(src->libraries[i]->elements[j]->items[k])->magnification;
             break;
         }
       }
@@ -170,7 +170,7 @@ __declspec(dllexport) void CopyLayout(Layout *src, Layout *dst) {
       for (size_t k = 0; k < dst->libraries[i]->elements[j]->items.size(); ++k) {
         if (dst->libraries[i]->elements[j]->items[k]->type != GeometryType::reference)
           continue;
-        p_ref = static_cast<Geometry_Reference *>(dst->libraries[i]->elements[j]->items[k]);
+        p_ref = static_cast<Reference *>(dst->libraries[i]->elements[j]->items[k]);
         refFound = false;
         for (size_t l = 0; l < dst->libraries.size() && !refFound; ++l)
           for (size_t m = 0; m < dst->libraries[l]->elements.size() && !refFound; ++m) {

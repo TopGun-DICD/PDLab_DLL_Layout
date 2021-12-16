@@ -392,10 +392,10 @@ void GDSIIBinaryReader::ReadSection_BOUNDARY(Record &_record) {
     return;
   }
 
-  p_activeItem = new Geometry_Polygon;
+  p_activeItem = new Polygon;
   p_activeItem->type = GeometryType::polygon;
   p_activeItem->layer = -1;
-  static_cast<Geometry_Polygon *>(p_activeItem)->dataType = 0;
+  static_cast<Polygon *>(p_activeItem)->dataType = 0;
   p_activeElement->items.push_back(p_activeItem);
 }
 
@@ -413,12 +413,12 @@ void GDSIIBinaryReader::ReadSection_PATH(Record &_record) {
     return;
   }
 
-  p_activeItem = new Geometry_Path;
+  p_activeItem = new Path;
   p_activeItem->type = GeometryType::path;
   p_activeItem->layer = -1;
-  static_cast<Geometry_Path *>(p_activeItem)->dataType = 0;
-  static_cast<Geometry_Path *>(p_activeItem)->pathType = 0;
-  static_cast<Geometry_Path *>(p_activeItem)->width = 0;
+  static_cast<Path *>(p_activeItem)->dataType = 0;
+  static_cast<Path *>(p_activeItem)->pathType = 0;
+  static_cast<Path *>(p_activeItem)->width = 0;
 
   p_activeElement->items.push_back(p_activeItem);
 }
@@ -437,13 +437,13 @@ void GDSIIBinaryReader::ReadSection_SREF(Record &_record) {
     return;
   }
 
-  p_activeItem = new Geometry_Reference;
+  p_activeItem = new Reference;
   p_activeItem->type = GeometryType::reference;
   p_activeItem->layer = -1;
-  static_cast<Geometry_Reference *>(p_activeItem)->name.erase();
-  static_cast<Geometry_Reference *>(p_activeItem)->referenceTo = nullptr;
-  static_cast<Geometry_Reference *>(p_activeItem)->transformationFlags = 0;
-  static_cast<Geometry_Reference *>(p_activeItem)->magnification = 1.0;
+  static_cast<Reference *>(p_activeItem)->name.erase();
+  static_cast<Reference *>(p_activeItem)->referenceTo = nullptr;
+  static_cast<Reference *>(p_activeItem)->transformationFlags = 0;
+  static_cast<Reference *>(p_activeItem)->magnification = 1.0;
 
   p_activeElement->items.push_back(p_activeItem);
 }
@@ -464,15 +464,15 @@ void GDSIIBinaryReader::ReadSection_TEXT(Record &_record) {
     return;
   }
 
-  p_activeItem = new Geometry_Text;
+  p_activeItem = new Text;
   p_activeItem->type = GeometryType::text;
   p_activeItem->layer = -1;
-  static_cast<Geometry_Text *>(p_activeItem)->textType = 0;
-  static_cast<Geometry_Text *>(p_activeItem)->flagsPresentation = 0;
-  static_cast<Geometry_Text *>(p_activeItem)->flagsTransformation = 0;
-  static_cast<Geometry_Text *>(p_activeItem)->pathType = 0;
-  static_cast<Geometry_Text *>(p_activeItem)->width = 0;
-  static_cast<Geometry_Text *>(p_activeItem)->magnification = 1.0;
+  static_cast<Text *>(p_activeItem)->textType = 0;
+  static_cast<Text *>(p_activeItem)->flagsPresentation = 0;
+  static_cast<Text *>(p_activeItem)->flagsTransformation = 0;
+  static_cast<Text *>(p_activeItem)->pathType = 0;
+  static_cast<Text *>(p_activeItem)->width = 0;
+  static_cast<Text *>(p_activeItem)->magnification = 1.0;
   p_activeElement->items.push_back(p_activeItem);
 }
 
@@ -514,10 +514,10 @@ void GDSIIBinaryReader::ReadSection_DATATYPE(Record &_record) {
 
   switch (p_activeItem->type) {
     case GeometryType::polygon:
-      static_cast<Geometry_Polygon *>(p_activeItem)->dataType = dataType;
+      static_cast<Polygon *>(p_activeItem)->dataType = dataType;
       break;
     case GeometryType::path:
-      static_cast<Geometry_Path *>(p_activeItem)->dataType = dataType;
+      static_cast<Path *>(p_activeItem)->dataType = dataType;
       break;
     default:
       ;
@@ -545,10 +545,10 @@ void GDSIIBinaryReader::ReadSection_WIDTH(Record &_record) {
 
   switch (p_activeItem->type) {
     case GeometryType::path:
-      static_cast<Geometry_Path *>(p_activeItem)->width = width;
+      static_cast<Path *>(p_activeItem)->width = width;
       break;
     case GeometryType::text:
-      static_cast<Geometry_Text *>(p_activeItem)->width = width;
+      static_cast<Text *>(p_activeItem)->width = width;
       break;
     default:
       ;
@@ -572,17 +572,17 @@ void GDSIIBinaryReader::ReadSection_XY(Record &_record) {
 
   int numberOfCoors = _record.length / sizeof(Coord);
 
-  Geometry_Polygon   *p_boundary  = nullptr;
-  Geometry_Path      *p_path      = nullptr;
-  Geometry_Box       *p_box       = nullptr;
-  Geometry_Reference *p_reference = nullptr;
-  Geometry_Text      *p_text      = nullptr;
+  Polygon   *p_boundary  = nullptr;
+  Path      *p_path      = nullptr;
+  Rectangle *p_box       = nullptr;
+  Reference *p_reference = nullptr;
+  Text      *p_text      = nullptr;
   Coord               coord = {0, 0};
   int                 i = 0;
 
   switch (p_activeItem->type) {
     case GeometryType::polygon:
-      p_boundary = static_cast<Geometry_Polygon *>(p_activeItem);
+      p_boundary = static_cast<Polygon *>(p_activeItem);
       p_boundary->coords.resize(numberOfCoors);
       for (i = 0; i < numberOfCoors; ++i) {
         file.read(reinterpret_cast<char *>(&coord), sizeof(Coord));
@@ -594,7 +594,7 @@ void GDSIIBinaryReader::ReadSection_XY(Record &_record) {
       }
       break;
     case GeometryType::path:
-      p_path = static_cast<Geometry_Path *>(p_activeItem);
+      p_path = static_cast<Path *>(p_activeItem);
       p_path->coords.resize(numberOfCoors);
       for (i = 0; i < numberOfCoors; ++i) {
         file.read(reinterpret_cast<char *>(&coord), sizeof(Coord));
@@ -605,8 +605,8 @@ void GDSIIBinaryReader::ReadSection_XY(Record &_record) {
         p_path->coords[i] = coord;
       }
       break;
-    case GeometryType::box:
-      p_box = static_cast<Geometry_Box *>(p_activeItem);
+    case GeometryType::rectangle:
+      p_box = static_cast<Rectangle *>(p_activeItem);
       p_box->coords.resize(numberOfCoors);
       for (i = 0; i < numberOfCoors; ++i) {
         file.read(reinterpret_cast<char *>(&coord), sizeof(Coord));
@@ -618,7 +618,7 @@ void GDSIIBinaryReader::ReadSection_XY(Record &_record) {
       }
       break;
     case GeometryType::reference:
-      p_reference = static_cast<Geometry_Reference *>(p_activeItem);
+      p_reference = static_cast<Reference *>(p_activeItem);
 
       file.read(reinterpret_cast<char *>(&coord), sizeof(Coord));
       Normalize_DWORD(coord.x);
@@ -627,7 +627,7 @@ void GDSIIBinaryReader::ReadSection_XY(Record &_record) {
       p_reference->coords.push_back(coord);
       break;
     case GeometryType::text:
-      p_text = static_cast<Geometry_Text *>(p_activeItem);
+      p_text = static_cast<Text *>(p_activeItem);
 
       file.read(reinterpret_cast<char *>(&coord), sizeof(Coord));
       Normalize_DWORD(coord.x);
@@ -679,7 +679,7 @@ void GDSIIBinaryReader::ReadSection_SNAME(Record &_record) {
   char *str = new char[_record.length + 1];
   memset(str, 0, _record.length + 1);
   file.read(str, _record.length);
-  static_cast<Geometry_Reference *>(p_activeItem)->name = str;
+  static_cast<Reference *>(p_activeItem)->name = str;
   delete[] str;
   str = nullptr;
 }
@@ -710,7 +710,7 @@ void GDSIIBinaryReader::ReadSection_TEXTTYPE(Record &_record) {
   file.read(reinterpret_cast<char *>(&type), sizeof(__int16));
   Normalize_WORD(type);
 
-  static_cast<Geometry_Text *>(p_activeItem)->textType = type;
+  static_cast<Text *>(p_activeItem)->textType = type;
 }
 
 void GDSIIBinaryReader::ReadSection_PRESENTATION(Record &_record) {
@@ -735,7 +735,7 @@ void GDSIIBinaryReader::ReadSection_PRESENTATION(Record &_record) {
   file.read(reinterpret_cast<char *>(&flags), sizeof(__int16));
   Normalize_WORD(flags);
 
-  static_cast<Geometry_Text *>(p_activeItem)->flagsPresentation = flags;
+  static_cast<Text *>(p_activeItem)->flagsPresentation = flags;
 }
 
 // UNUSED
@@ -761,7 +761,7 @@ void GDSIIBinaryReader::ReadSection_STRING(Record &_record) {
   char *str = new char[_record.length + 1];
   memset(str, 0, _record.length + 1);
   file.read(str, _record.length);
-  static_cast<Geometry_Text *>(p_activeItem)->stringValue = str;
+  static_cast<Text *>(p_activeItem)->stringValue = str;
   delete[] str;
   str = nullptr;
 }
@@ -792,7 +792,7 @@ void GDSIIBinaryReader::ReadSection_STRANS(Record &_record) {
       //static_cast<GDSII_ArrayRef *>(p_activeItem)-> = flags;
       //break;
     case GeometryType::text:
-      static_cast<Geometry_Text *>(p_activeItem)->flagsTransformation = flags;
+      static_cast<Text *>(p_activeItem)->flagsTransformation = flags;
       break;
     default:
       ;
@@ -820,13 +820,13 @@ void GDSIIBinaryReader::ReadSection_MAG(Record &_record) {
 
   switch (p_activeItem->type) {
     case GeometryType::reference:
-      static_cast<Geometry_Reference *>(p_activeItem)->magnification = mag;
+      static_cast<Reference *>(p_activeItem)->magnification = mag;
       break;
     //case et_arrayRef:
       //static_cast<GDSII_ArrayRef *>(p_activeItem)->magnification = mag;
       //break;
     case GeometryType::text:
-      static_cast<Geometry_Text *>(p_activeItem)->magnification = mag;
+      static_cast<Text *>(p_activeItem)->magnification = mag;
       break;
     default:
       ;
@@ -860,10 +860,10 @@ void GDSIIBinaryReader::ReadSection_PATHTYPE(Record &_record) {
 
   switch (p_activeItem->type) {
     case GeometryType::path:
-      static_cast<Geometry_Path *>(p_activeItem)->pathType = type;
+      static_cast<Path *>(p_activeItem)->pathType = type;
       break;
     case GeometryType::text:
-      static_cast<Geometry_Text *>(p_activeItem)->pathType = type;
+      static_cast<Text *>(p_activeItem)->pathType = type;
       break;
     default:
       ;
@@ -949,10 +949,10 @@ void GDSIIBinaryReader::ReadSection_BOX(Record &_record) {
     return;
   }
 
-  p_activeItem = new Geometry_Box;
-  p_activeItem->type = GeometryType::box;
+  p_activeItem = new Rectangle;
+  p_activeItem->type = GeometryType::rectangle;
   p_activeItem->layer = -1;
-  static_cast<Geometry_Box *>(p_activeItem)->boxType = 0;
+  static_cast<Rectangle *>(p_activeItem)->boxType = 0;
   p_activeElement->items.push_back(p_activeItem);
 }
 
@@ -969,7 +969,7 @@ void GDSIIBinaryReader::ReadSection_BOXTYPE(Record &_record) {
     //MessageManager::Get()->PushError("Format error. Found BOXTYPE section outside of element.");
     return;
   }
-  if (p_activeItem->type != GeometryType::box) {
+  if (p_activeItem->type != GeometryType::rectangle) {
     //MessageManager::Get()->PushError("Format error. Found BOXTYPE section given for wrong type of element.");
     return;
   }
@@ -978,7 +978,7 @@ void GDSIIBinaryReader::ReadSection_BOXTYPE(Record &_record) {
   file.read(reinterpret_cast<char *>(&type), sizeof(__int16));
   Normalize_WORD(type);
 
-  static_cast<Geometry_Box *>(p_activeItem)->boxType = type;
+  static_cast<Rectangle *>(p_activeItem)->boxType = type;
 }
 
 //void GDSIIBinaryReader::ReadSection_PLEX(Record &_record) {}
@@ -996,7 +996,7 @@ void GDSIIBinaryReader::ReadSection_BOXTYPE(Record &_record) {
 //void GDSIIBinaryReader::ReadSection_LIBSECUR(Record &_record) {}
 
 bool GDSIIBinaryReader::ResolveReferences() {
-  Geometry_Reference  *p_reference = nullptr;
+  Reference  *p_reference = nullptr;
   bool                 refFound = false;
 
   // Structure references
@@ -1005,7 +1005,7 @@ bool GDSIIBinaryReader::ResolveReferences() {
       for (size_t k = 0; k < p_data->libraries[i]->elements[j]->items.size(); ++k) {
         if (p_data->libraries[i]->elements[j]->items[k]->type != GeometryType::reference)
           continue;
-        p_reference = static_cast<Geometry_Reference *>(p_data->libraries[i]->elements[j]->items[k]);
+        p_reference = static_cast<Reference *>(p_data->libraries[i]->elements[j]->items[k]);
         refFound = false;
         for (size_t l = 0; l < p_data->libraries.size() && !refFound; ++l)
           for (size_t m = 0; m < p_data->libraries[l]->elements.size() && !refFound; ++m) {

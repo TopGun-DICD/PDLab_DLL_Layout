@@ -96,13 +96,13 @@ bool GDSIIBinaryWriter::Write(std::wstring fileName, Layout *layout) {
         //  break;
         switch (layout->libraries[i]->elements[j]->items[k]->type) {
         case GeometryType::polygon:
-            WriteSection_BOUNDARY(reinterpret_cast<Geometry_Polygon *>(layout->libraries[i]->elements[j]->items[k]));
+            WriteSection_BOUNDARY(reinterpret_cast<Polygon *>(layout->libraries[i]->elements[j]->items[k]));
             break;
         case GeometryType::reference:
-            WriteSection_SREF(reinterpret_cast<Geometry_Reference *>(layout->libraries[i]->elements[j]->items[k]));
+            WriteSection_SREF(reinterpret_cast<Reference *>(layout->libraries[i]->elements[j]->items[k]));
             break;
         case GeometryType::path:
-            WriteSection_PATH(reinterpret_cast<Geometry_Path *>(layout->libraries[i]->elements[j]->items[k]));
+            WriteSection_PATH(reinterpret_cast<Path *>(layout->libraries[i]->elements[j]->items[k]));
             break;
         }
       }
@@ -235,7 +235,7 @@ void GDSIIBinaryWriter::WriteSection_ENDSTRUCTURE(Element *element) {
   file.write(reinterpret_cast<char *>(&gdsiiRecord), sizeof(Record));
 }
 
-void GDSIIBinaryWriter::WriteSection_BOUNDARY(Geometry_Polygon *polygon) {
+void GDSIIBinaryWriter::WriteSection_BOUNDARY(Polygon *polygon) {
   Record gdsiiRecord = { sizeof(Record) , rt_BOUNDARY , 0 };
   // Write Header
   DeNormalize_WORD(gdsiiRecord.length);
@@ -278,7 +278,7 @@ void GDSIIBinaryWriter::WriteSection_BOUNDARY(Geometry_Polygon *polygon) {
   file.write(reinterpret_cast<char *>(&gdsiiRecord), sizeof(Record));
 }
 
-void GDSIIBinaryWriter::WriteSection_SREF(Geometry_Reference *reference) {
+void GDSIIBinaryWriter::WriteSection_SREF(Reference *reference) {
   Record gdsiiRecord = { sizeof(Record) , rt_SREF , 0 };
   // Write Header
   DeNormalize_WORD(gdsiiRecord.length);
@@ -316,7 +316,7 @@ void GDSIIBinaryWriter::WriteSection_SREF(Geometry_Reference *reference) {
   file.write(reinterpret_cast<char *>(&gdsiiRecord), sizeof(Record));
 }
 
-void GDSIIBinaryWriter::WriteSection_PATH(Geometry_Path *path) {
+void GDSIIBinaryWriter::WriteSection_PATH(Path *path) {
   Record gdsiiRecord = { sizeof(Record) , rt_PATH , 0 };
   // Write Header
   DeNormalize_WORD(gdsiiRecord.length);

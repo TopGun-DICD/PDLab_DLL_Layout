@@ -18,7 +18,7 @@ private:
 
   void WriteSection_ENDSTRUCTURE(Element *element);
 
-  void WriteSection_BOUNDARY(Geometry_Polygon *polygon);
-  void WriteSection_SREF(Geometry_Reference *reference);
-  void WriteSection_PATH(Geometry_Path *path);
+  void WriteSection_BOUNDARY(Polygon *polygon);
+  void WriteSection_SREF(Reference *reference);
+  void WriteSection_PATH(Path *path);
 };
