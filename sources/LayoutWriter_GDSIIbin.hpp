@@ -1,8 +1,8 @@
 #include "LayoutWriter.hpp"
 
-class GDSIIBinaryWriter : public AbstractLayoutWriter {
+class LayoutWriter_GDSIIbin : public LayoutWriter {
 public:
-  GDSIIBinaryWriter();
+  LayoutWriter_GDSIIbin();
 public:
   bool Write(std::wstring fileName, Layout *layout) final;
 private:
@@ -19,6 +19,7 @@ private:
   void WriteSection_ENDSTRUCTURE(Element *element);
 
   void WriteSection_BOUNDARY(Polygon *polygon);
+  void WriteSection_BOX(Rectangle *rectangle);
   void WriteSection_SREF(Reference *reference);
   void WriteSection_PATH(Path *path);
 };

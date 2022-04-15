@@ -1,18 +1,17 @@
 #include "LayoutWriter.hpp"
 #include "LayoutWriter_GDSIIbin.hpp"
 
-AbstractLayoutWriter::AbstractLayoutWriter() {}
+LayoutWriter::LayoutWriter() {}
 
-AbstractLayoutWriter *GetWriter(FileFormat format) {
-  switch(format) {
-    case FileFormat::GDSII_bin:
-      return  new GDSIIBinaryWriter;
+LayoutWriter *GetWriter(FileFormat format) {
+  switch (format) {
+    case FileFormat::GDSII_bin:  return new LayoutWriter_GDSIIbin;
   }
-  
+
   return nullptr;
 }
 
-void FreeWriter(AbstractLayoutWriter *writer) {
+void FreeWriter(LayoutWriter *writer) {
   if (!writer)
     return;
   delete writer;

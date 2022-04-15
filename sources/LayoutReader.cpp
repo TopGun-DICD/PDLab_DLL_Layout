@@ -3,27 +3,27 @@
 #include "LayoutReader_GDSIIascii.hpp"
 #include "LayoutReader_MSK.hpp"
 
-AbstractLayoutReader::AbstractLayoutReader() : p_data(nullptr) {}
+LayoutReader::LayoutReader() : p_layout(nullptr) {}
 
-AbstractLayoutReader *GetReader(const std::wstring &fName) {
-  AbstractLayoutReader *p_reader = nullptr;
+LayoutReader *GetReader(const std::wstring &fName) {
+  LayoutReader *p_reader = nullptr;
 
   // Check if file is in GDSII binary format
-  p_reader = new GDSIIBinaryReader;
+  p_reader = new LayoutReader_GDSIIbin;
   if (p_reader->IsMyFormat(fName))
     return p_reader;
   delete p_reader;
   p_reader = nullptr;
 
   // Check if file is in GDSII ASCII format
-  p_reader = new GDSIIASCIIReader;
+  p_reader = new LayoutReader_GDSIIascii;
   if (p_reader->IsMyFormat(fName))
     return p_reader;
   delete p_reader;
   p_reader = nullptr;
 
   // Check if file is in MSK format
-  p_reader = new MSKReader;
+  p_reader = new LayoutReader_MSK;
   if (p_reader->IsMyFormat(fName))
     return p_reader;
   delete p_reader;
@@ -32,7 +32,9 @@ AbstractLayoutReader *GetReader(const std::wstring &fName) {
   return p_reader;
 }
 
-void FreeReader(AbstractLayoutReader *reader) {
+void FreeReader(LayoutReader *reader) {
+  if (!reader)
+    return;
   delete reader;
   reader = nullptr;
 }

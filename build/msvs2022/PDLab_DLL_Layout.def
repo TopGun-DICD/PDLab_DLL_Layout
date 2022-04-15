@@ -1,0 +1,8 @@
+LIBRARY "PDLab_DLL_Layout"
+EXPORTS
+			CreateLayoutFromFile
+			ReadLayoutFromFile
+			ClearLayout
+			CopyLayout
+			WriteLayout
+			FreeLayout

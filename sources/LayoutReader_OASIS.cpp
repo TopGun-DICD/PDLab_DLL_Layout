@@ -18,10 +18,10 @@ bool OASISReader::IsMyFormat(const std::wstring &fName) {
   return false;
 }
 
-bool OASISReader::Read(Layout *layout) {
+bool OASISReader::Read(Layout *layout, LayoutReaderOptions* options) {
   if (!layout)
     return false;
-  p_data = layout;
+  p_layout = layout;
 
   return false;
 

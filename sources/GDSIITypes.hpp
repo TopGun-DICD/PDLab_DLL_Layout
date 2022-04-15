@@ -4,20 +4,31 @@
 // [2] https://github.com/HomerReid/libGDSII/blob/master/lib/ReadGDSIIFile.cc
 // [3] https://www.artwork.com/gdsii/gdsii/index.htm
 // [4] https://gitlab.com/stone.code/liblayout/-/blob/master/gdsii_write.cpp
+// [5] https://github.com/heitzmann/gdstk/blob/master/src/gdsii.h
 
-struct Record {
-  __int16 length;
-  __int8  recordType,
+struct GDSIIRecord {
+  int16_t length;
+  int8_t  recordType,
           dataType;
 };
 
 struct DateTime {
-  __int16 year,
+  int16_t year,
           month,
           day,
           hour,
           minute,
           second;
+};
+
+enum DataType {
+  noData = 0,
+  bitArray,
+  WORD,
+  DWORD,
+  REAL,
+  DOUBLE,
+  ASCIISTRING,
 };
 
 enum RecordType {
@@ -50,8 +61,8 @@ enum RecordType {
   rt_STRANS       = 0x1A,
   rt_MAG          = 0x1B,
   rt_ANGLE        = 0x1C,
-  rt_LINKTYPE     = 0x1D, // or UNUSED ??? [2]
-  rt_LINKKEYS     = 0x1E, // or UNUSED ??? [2]
+  //rt_LINKTYPE     = 0x1D, // or UNUSED ??? [2]
+  //rt_LINKKEYS     = 0x1E, // or UNUSED ??? [2]
   rt_REFLIBS      = 0x1F,
   rt_FONTS        = 0x20,
   rt_PATHTYPE     = 0x21,
@@ -83,24 +94,14 @@ enum RecordType {
   rt_LIBSECUR     = 0x3b,
 };
 
-enum class DataType {
-  noData = 0,
-  bitArray,
-  WORD,
-  DWORD,
-  REAL,
-  DOUBLE,
-  ASCIISTRING,
-};
-
 union UNION_WORD {
-  __int16       value;
-  unsigned char byteArray[sizeof(__int16)];
+  int16_t       value;
+  unsigned char byteArray[sizeof(int16_t)];
 };
 
 union UNION_DWORD {
-  __int32       value;
-  unsigned char byteArray[sizeof(__int32)];
+  int32_t       value;
+  unsigned char byteArray[sizeof(int32_t)];
 };
 
 union UNION_DOUBLE {
