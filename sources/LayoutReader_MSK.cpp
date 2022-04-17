@@ -55,6 +55,11 @@ int16_t	LayoutReader_MSK::calculate_MSK_layer_num(const std::string& layer_name)
         {"M4",36},
         {"M5",53},
         {"M6",55},
+        {"VI",25},
+        {"V2",32},
+        {"V3",35},
+        {"V4",52},
+        {"V5",54},
     };
     auto it = all_layers.find(layer_name);
     if (it == all_layers.end())

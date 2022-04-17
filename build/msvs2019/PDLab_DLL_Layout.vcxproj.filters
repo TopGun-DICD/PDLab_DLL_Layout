@@ -50,25 +50,25 @@
     <ClCompile Include="..\..\sources\LayoutReader_GDSIIbin.cpp">
       <Filter>Source Files\GDSII</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\sources\LayoutReader_MSK.cpp">
-      <Filter>Source Files\GDSII</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\sources\LayoutWriter_GDSIIbin.cpp">
-      <Filter>Source Files\MSK</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\sources\LayoutWriter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\sources\LayoutWriter_GDSIIascii.cpp">
       <Filter>Header Files\GDSII</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\sources\LayoutWriter_MSK.cpp">
-      <Filter>Header Files\MSK</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\sources\LayoutReader_OASIS.cpp">
       <Filter>Source Files\OASIS</Filter>
     </ClCompile>
     <ClCompile Include="..\..\sources\GDSIIHelperFunctions.cpp">
+      <Filter>Source Files\GDSII</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\sources\LayoutReader_MSK.cpp">
+      <Filter>Source Files\MSK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\sources\LayoutWriter_MSK.cpp">
+      <Filter>Source Files\MSK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\sources\LayoutWriter_GDSIIbin.cpp">
       <Filter>Source Files\GDSII</Filter>
     </ClCompile>
   </ItemGroup>
