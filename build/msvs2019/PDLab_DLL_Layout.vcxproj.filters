@@ -31,6 +31,24 @@
     <Filter Include="Source Files\OASIS">
       <UniqueIdentifier>{e7d0b6b1-06c0-4ca1-8141-6cb301246ae0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\CIF">
+      <UniqueIdentifier>{f367a33a-5da5-4be2-b362-74e7d8e13611}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\CIF">
+      <UniqueIdentifier>{60e234a0-eaa8-464d-9b09-8e557eb79082}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\DXF">
+      <UniqueIdentifier>{f935d791-fae3-4b16-b669-193e44fede51}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\DXF">
+      <UniqueIdentifier>{c0862e84-4844-4a97-bdd3-cfe2406eb6a4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\MAG">
+      <UniqueIdentifier>{df552143-50f4-4870-b052-aeadda7ca507}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\MAG">
+      <UniqueIdentifier>{fc5d08b5-4dd3-47f3-a421-86ae8bf7a034}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="PDLab_DLL_Layout.def">
@@ -71,6 +89,27 @@
     <ClCompile Include="..\..\sources\LayoutWriter_GDSIIbin.cpp">
       <Filter>Source Files\GDSII</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\sources\LayoutReader_CIF.cpp">
+      <Filter>Source Files\CIF</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\sources\LayoutReader_DXF.cpp">
+      <Filter>Source Files\DXF</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\sources\LayoutReader_MAG.cpp">
+      <Filter>Source Files\MAG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\sources\LayoutWriter_OASIS.cpp">
+      <Filter>Source Files\OASIS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\sources\LayoutWriter_DXF.cpp">
+      <Filter>Source Files\DXF</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\sources\LayoutWriter_CIF.cpp">
+      <Filter>Source Files\CIF</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\sources\LayoutWriter_MAG.cpp">
+      <Filter>Source Files\MAG</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\sources\Layout.hpp">
@@ -108,6 +147,27 @@
     </ClInclude>
     <ClInclude Include="..\..\sources\LayoutWriter_MSK.hpp">
       <Filter>Header Files\MSK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\sources\LayoutReader_CIF.hpp">
+      <Filter>Header Files\CIF</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\sources\LayoutReader_DXF.hpp">
+      <Filter>Header Files\DXF</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\sources\LayoutReader_MAG.hpp">
+      <Filter>Header Files\MAG</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\sources\LayoutWriter_OASIS.hpp">
+      <Filter>Header Files\OASIS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\sources\LayoutWriter_DXF.hpp">
+      <Filter>Header Files\DXF</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\sources\LayoutWriter_CIF.hpp">
+      <Filter>Header Files\CIF</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\sources\LayoutWriter_MAG.hpp">
+      <Filter>Header Files\MAG</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
