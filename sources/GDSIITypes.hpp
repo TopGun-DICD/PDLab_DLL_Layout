@@ -5,11 +5,12 @@
 // [3] https://www.artwork.com/gdsii/gdsii/index.htm
 // [4] https://gitlab.com/stone.code/liblayout/-/blob/master/gdsii_write.cpp
 // [5] https://github.com/heitzmann/gdstk/blob/master/src/gdsii.h
+// [6] https://github.com/KLayout/klayout/tree/master/src/plugins/streamers/gds2/db_plugin
 
 struct GDSIIRecord {
-  int16_t length;
-  int8_t  recordType,
-          dataType;
+  uint16_t  length;
+  int8_t    recordType,
+            dataType;
 };
 
 struct DateTime {

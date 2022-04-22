@@ -72,7 +72,7 @@ bool LayoutWriter_GDSIIbin::Write(std::wstring fileName, Layout *layout) {
 void LayoutWriter_GDSIIbin::WriteSection_HEADER() {
   GDSIIRecord gdsiiRecord = { sizeof(GDSIIRecord) + sizeof(int16_t) , rt_HEADER , 2 };
   // Write Header
-  DeNormalize_WORD(gdsiiRecord.length);
+  DeNormalize_WORD((int16_t &)gdsiiRecord.length);
   file.write(reinterpret_cast<char *>(&gdsiiRecord), sizeof(GDSIIRecord));
   // Write Data
   int16_t versionNumber = 600;
@@ -83,7 +83,7 @@ void LayoutWriter_GDSIIbin::WriteSection_HEADER() {
 void LayoutWriter_GDSIIbin::WriteSection_BEGINLIBRARY() {
   GDSIIRecord gdsiiRecord = { sizeof(GDSIIRecord) + 2 * sizeof(DateTime) , rt_BGNLIB , 2};
   // Write Header
-  DeNormalize_WORD(gdsiiRecord.length);
+  DeNormalize_WORD((int16_t&)gdsiiRecord.length);
   file.write(reinterpret_cast<char *>(&gdsiiRecord), sizeof(GDSIIRecord));
   // Write Data
   DateTime lastTimeAccessed = { 2005,  3, 17, 14, 20, 51 };
@@ -109,7 +109,7 @@ void LayoutWriter_GDSIIbin::WriteSection_BEGINLIBRARY() {
 void LayoutWriter_GDSIIbin::WriteSection_LIBNAME(Library *lib) {
   GDSIIRecord gdsiiRecord = { static_cast <int16_t>(sizeof(GDSIIRecord)) + static_cast<int16_t>(lib->name.length()) , rt_LIBNAME , 6 };
   // Write Header
-  DeNormalize_WORD(gdsiiRecord.length);
+  DeNormalize_WORD((int16_t&)gdsiiRecord.length);
   file.write(reinterpret_cast<char *>(&gdsiiRecord), sizeof(GDSIIRecord));
   // Write Data
   file.write(lib->name.data(), lib->name.length());
@@ -118,7 +118,7 @@ void LayoutWriter_GDSIIbin::WriteSection_LIBNAME(Library *lib) {
 void LayoutWriter_GDSIIbin::WriteSection_UNITS(Library *lib) {
   GDSIIRecord gdsiiRecord = { sizeof(GDSIIRecord) + sizeof(Units) , rt_UNITS , 5};
   // Write Header
-  DeNormalize_WORD(gdsiiRecord.length);
+  DeNormalize_WORD((int16_t&)gdsiiRecord.length);
   file.write(reinterpret_cast<char *>(&gdsiiRecord), sizeof(GDSIIRecord));
   // Write Data
   Units units = lib->units;
@@ -131,14 +131,14 @@ void LayoutWriter_GDSIIbin::WriteSection_UNITS(Library *lib) {
 void LayoutWriter_GDSIIbin::WriteSection_ENDLIBRARY(Library *lib) {
   GDSIIRecord gdsiiRecord = { sizeof(GDSIIRecord) , rt_ENDLIB , 0 };
   // Write Header
-  DeNormalize_WORD(gdsiiRecord.length);
+  DeNormalize_WORD((int16_t&)gdsiiRecord.length);
   file.write(reinterpret_cast<char *>(&gdsiiRecord), sizeof(GDSIIRecord));
 }
 
 void LayoutWriter_GDSIIbin::WriteSection_BEGINSTRUCTURE(Element *element) {
   GDSIIRecord gdsiiRecord = { sizeof(GDSIIRecord) + 2 * sizeof(DateTime) , rt_BGNSTR , 2 };
   // Write Header
-  DeNormalize_WORD(gdsiiRecord.length);
+  DeNormalize_WORD((int16_t&)gdsiiRecord.length);
   file.write(reinterpret_cast<char *>(&gdsiiRecord), sizeof(GDSIIRecord));
   // Write Data
   DateTime lastTimeModified = { 2001, 11, 11, 04, 43, 34 };
@@ -167,7 +167,7 @@ void LayoutWriter_GDSIIbin::WriteSection_STRNAME(Element *element) {
     actualNameLength = ((element->name.length() / 4) + 1) * 4;  //((static_cast<int>(element->name.length()) / 4) + 1) * 4;
   GDSIIRecord gdsiiRecord = { static_cast <int16_t>(sizeof(GDSIIRecord)) + static_cast<int16_t>(actualNameLength) , rt_STRNAME , 6 };
   // Write Header
-  DeNormalize_WORD(gdsiiRecord.length);
+  DeNormalize_WORD((int16_t&)gdsiiRecord.length);
   file.write(reinterpret_cast<char *>(&gdsiiRecord), sizeof(GDSIIRecord));
   // Write Data
   file.write(element->name.data(), element->name.length());
@@ -181,20 +181,20 @@ void LayoutWriter_GDSIIbin::WriteSection_STRNAME(Element *element) {
 void LayoutWriter_GDSIIbin::WriteSection_ENDSTRUCTURE(Element *element) {
   GDSIIRecord gdsiiRecord = { sizeof(GDSIIRecord) , rt_ENDSTR , 0 };
   // Write Header
-  DeNormalize_WORD(gdsiiRecord.length);
+  DeNormalize_WORD((int16_t&)gdsiiRecord.length);
   file.write(reinterpret_cast<char *>(&gdsiiRecord), sizeof(GDSIIRecord));
 }
 
 void LayoutWriter_GDSIIbin::WriteSection_BOUNDARY(Polygon *polygon) {
   GDSIIRecord gdsiiRecord = { sizeof(GDSIIRecord) , rt_BOUNDARY , 0 };
   // Write Header
-  DeNormalize_WORD(gdsiiRecord.length);
+  DeNormalize_WORD((int16_t&)gdsiiRecord.length);
   file.write(reinterpret_cast<char *>(&gdsiiRecord), sizeof(GDSIIRecord));
   // LAYER
   gdsiiRecord.recordType = rt_LAYER;
   gdsiiRecord.length = sizeof(GDSIIRecord) + sizeof(int16_t);
   gdsiiRecord.dataType = 2;
-  DeNormalize_WORD(gdsiiRecord.length);
+  DeNormalize_WORD((int16_t&)gdsiiRecord.length);
   file.write(reinterpret_cast<char *>(&gdsiiRecord), sizeof(GDSIIRecord));
   int16_t layerNumber = polygon->layer;
   DeNormalize_WORD(layerNumber);
@@ -203,7 +203,7 @@ void LayoutWriter_GDSIIbin::WriteSection_BOUNDARY(Polygon *polygon) {
   gdsiiRecord.recordType = rt_DATATYPE;
   gdsiiRecord.length = sizeof(GDSIIRecord) + sizeof(int16_t);
   gdsiiRecord.dataType = 2;
-  DeNormalize_WORD(gdsiiRecord.length);
+  DeNormalize_WORD((int16_t&)gdsiiRecord.length);
   file.write(reinterpret_cast<char *>(&gdsiiRecord), sizeof(GDSIIRecord));
   int16_t dataType = polygon->dataType;
   DeNormalize_WORD(dataType);
@@ -212,7 +212,7 @@ void LayoutWriter_GDSIIbin::WriteSection_BOUNDARY(Polygon *polygon) {
   gdsiiRecord.recordType = rt_XY;
   gdsiiRecord.length = sizeof(GDSIIRecord) + static_cast<int16_t>(polygon->coords.size()) * sizeof(Coord);
   gdsiiRecord.dataType = 3;
-  DeNormalize_WORD(gdsiiRecord.length);
+  DeNormalize_WORD((int16_t&)gdsiiRecord.length);
   file.write(reinterpret_cast<char *>(&gdsiiRecord), sizeof(GDSIIRecord));
   for (size_t i = 0; i < polygon->coords.size(); ++i) {
     Coord coord = polygon->coords[i];
@@ -224,20 +224,20 @@ void LayoutWriter_GDSIIbin::WriteSection_BOUNDARY(Polygon *polygon) {
   gdsiiRecord.recordType = rt_ENDEL;
   gdsiiRecord.length = sizeof(GDSIIRecord);
   gdsiiRecord.dataType = 0;
-  DeNormalize_WORD(gdsiiRecord.length);
+  DeNormalize_WORD((int16_t&)gdsiiRecord.length);
   file.write(reinterpret_cast<char *>(&gdsiiRecord), sizeof(GDSIIRecord));
 }
 
 void LayoutWriter_GDSIIbin::WriteSection_BOX(Rectangle *rectangle) {
   GDSIIRecord gdsiiRecord = { sizeof(GDSIIRecord) , rt_BOUNDARY , 0 };
   // Write Header
-  DeNormalize_WORD(gdsiiRecord.length);
+  DeNormalize_WORD((int16_t&)gdsiiRecord.length);
   file.write(reinterpret_cast<char*>(&gdsiiRecord), sizeof(GDSIIRecord));
   // LAYER
   gdsiiRecord.recordType = rt_LAYER;
   gdsiiRecord.length = sizeof(GDSIIRecord) + sizeof(int16_t);
   gdsiiRecord.dataType = 2;
-  DeNormalize_WORD(gdsiiRecord.length);
+  DeNormalize_WORD((int16_t&)gdsiiRecord.length);
   file.write(reinterpret_cast<char*>(&gdsiiRecord), sizeof(GDSIIRecord));
   int16_t layerNumber = rectangle->layer;
   DeNormalize_WORD(layerNumber);
@@ -246,7 +246,7 @@ void LayoutWriter_GDSIIbin::WriteSection_BOX(Rectangle *rectangle) {
   gdsiiRecord.recordType = rt_DATATYPE;
   gdsiiRecord.length = sizeof(GDSIIRecord) + sizeof(int16_t);
   gdsiiRecord.dataType = 2;
-  DeNormalize_WORD(gdsiiRecord.length);
+  DeNormalize_WORD((int16_t&)gdsiiRecord.length);
   file.write(reinterpret_cast<char*>(&gdsiiRecord), sizeof(GDSIIRecord));
   int16_t dataType = rectangle->rectType;
   DeNormalize_WORD(dataType);
@@ -255,7 +255,7 @@ void LayoutWriter_GDSIIbin::WriteSection_BOX(Rectangle *rectangle) {
   gdsiiRecord.recordType = rt_XY;
   gdsiiRecord.length = sizeof(GDSIIRecord) + static_cast<int16_t>(rectangle->coords.size()) * sizeof(Coord);
   gdsiiRecord.dataType = 3;
-  DeNormalize_WORD(gdsiiRecord.length);
+  DeNormalize_WORD((int16_t&)gdsiiRecord.length);
   file.write(reinterpret_cast<char*>(&gdsiiRecord), sizeof(GDSIIRecord));
   for (size_t i = 0; i < rectangle->coords.size(); ++i) {
     Coord coord = rectangle->coords[i];
@@ -267,14 +267,14 @@ void LayoutWriter_GDSIIbin::WriteSection_BOX(Rectangle *rectangle) {
   gdsiiRecord.recordType = rt_ENDEL;
   gdsiiRecord.length = sizeof(GDSIIRecord);
   gdsiiRecord.dataType = 0;
-  DeNormalize_WORD(gdsiiRecord.length);
+  DeNormalize_WORD((int16_t&)gdsiiRecord.length);
   file.write(reinterpret_cast<char*>(&gdsiiRecord), sizeof(GDSIIRecord));
 }
 
 void LayoutWriter_GDSIIbin::WriteSection_SREF(Reference *reference) {
   GDSIIRecord gdsiiRecord = { sizeof(GDSIIRecord) , rt_SREF , 0 };
   // Write Header
-  DeNormalize_WORD(gdsiiRecord.length);
+  DeNormalize_WORD((int16_t&)gdsiiRecord.length);
   file.write(reinterpret_cast<char *>(&gdsiiRecord), sizeof(GDSIIRecord));
   // SNAME
   gdsiiRecord.recordType = rt_SNAME;
@@ -283,7 +283,7 @@ void LayoutWriter_GDSIIbin::WriteSection_SREF(Reference *reference) {
     actualNameLength = ((reference->name.length() / 4) + 1) * 4;  //static_cast<int>(((reference->name.length() / 4) + 1) * 4);
   gdsiiRecord.length = sizeof(GDSIIRecord) + static_cast<int16_t>(actualNameLength);
   gdsiiRecord.dataType = 6;
-  DeNormalize_WORD(gdsiiRecord.length);
+  DeNormalize_WORD((int16_t&)gdsiiRecord.length);
   file.write(reinterpret_cast<char *>(&gdsiiRecord), sizeof(GDSIIRecord));
   file.write(reference->name.data(), reference->name.length());
   if (reference->name.length() % 4 != 0) {
@@ -295,7 +295,7 @@ void LayoutWriter_GDSIIbin::WriteSection_SREF(Reference *reference) {
   gdsiiRecord.recordType = rt_XY;
   gdsiiRecord.length = sizeof(GDSIIRecord) + sizeof(Coord);
   gdsiiRecord.dataType = 3;
-  DeNormalize_WORD(gdsiiRecord.length);
+  DeNormalize_WORD((int16_t&)gdsiiRecord.length);
   file.write(reinterpret_cast<char *>(&gdsiiRecord), sizeof(GDSIIRecord));
   Coord coord = reference->coords[0];
   DeNormalize_DWORD(coord.x);
@@ -305,20 +305,20 @@ void LayoutWriter_GDSIIbin::WriteSection_SREF(Reference *reference) {
   gdsiiRecord.recordType = rt_ENDEL;
   gdsiiRecord.length = sizeof(GDSIIRecord);
   gdsiiRecord.dataType = 0;
-  DeNormalize_WORD(gdsiiRecord.length);
+  DeNormalize_WORD((int16_t&)gdsiiRecord.length);
   file.write(reinterpret_cast<char *>(&gdsiiRecord), sizeof(GDSIIRecord));
 }
 
 void LayoutWriter_GDSIIbin::WriteSection_PATH(Path *path) {
   GDSIIRecord gdsiiRecord = { sizeof(GDSIIRecord) , rt_PATH , 0 };
   // Write Header
-  DeNormalize_WORD(gdsiiRecord.length);
+  DeNormalize_WORD((int16_t&)gdsiiRecord.length);
   file.write(reinterpret_cast<char *>(&gdsiiRecord), sizeof(GDSIIRecord));
   // LAYER
   gdsiiRecord.recordType = rt_LAYER;
   gdsiiRecord.length = sizeof(GDSIIRecord) + sizeof(int16_t);
   gdsiiRecord.dataType = 2;
-  DeNormalize_WORD(gdsiiRecord.length);
+  DeNormalize_WORD((int16_t&)gdsiiRecord.length);
   file.write(reinterpret_cast<char *>(&gdsiiRecord), sizeof(GDSIIRecord));
   int16_t layerNumber = path->layer;
   DeNormalize_WORD(layerNumber);
@@ -327,7 +327,7 @@ void LayoutWriter_GDSIIbin::WriteSection_PATH(Path *path) {
   gdsiiRecord.recordType = rt_DATATYPE;
   gdsiiRecord.length = sizeof(GDSIIRecord) + sizeof(int16_t);
   gdsiiRecord.dataType = 2;
-  DeNormalize_WORD(gdsiiRecord.length);
+  DeNormalize_WORD((int16_t&)gdsiiRecord.length);
   file.write(reinterpret_cast<char *>(&gdsiiRecord), sizeof(GDSIIRecord));
   int16_t dataType = path->dataType;
   DeNormalize_WORD(dataType);
@@ -336,7 +336,7 @@ void LayoutWriter_GDSIIbin::WriteSection_PATH(Path *path) {
   gdsiiRecord.recordType = rt_PATHTYPE;
   gdsiiRecord.length = sizeof(GDSIIRecord) + sizeof(int16_t);
   gdsiiRecord.dataType = 2;
-  DeNormalize_WORD(gdsiiRecord.length);
+  DeNormalize_WORD((int16_t&)gdsiiRecord.length);
   file.write(reinterpret_cast<char *>(&gdsiiRecord), sizeof(GDSIIRecord));
   int16_t pathType = path->pathType;
   DeNormalize_WORD(pathType);
@@ -345,7 +345,7 @@ void LayoutWriter_GDSIIbin::WriteSection_PATH(Path *path) {
   gdsiiRecord.recordType = rt_WIDTH;
   gdsiiRecord.length = sizeof(GDSIIRecord) + sizeof(int32_t);
   gdsiiRecord.dataType = 3;
-  DeNormalize_WORD(gdsiiRecord.length);
+  DeNormalize_WORD((int16_t&)gdsiiRecord.length);
   file.write(reinterpret_cast<char *>(&gdsiiRecord), sizeof(GDSIIRecord));
   int32_t pathWidth = path->width;
   DeNormalize_DWORD(pathWidth);
@@ -354,7 +354,7 @@ void LayoutWriter_GDSIIbin::WriteSection_PATH(Path *path) {
   gdsiiRecord.recordType = rt_XY;
   gdsiiRecord.length = sizeof(GDSIIRecord) + static_cast<int16_t>(path->coords.size()) * sizeof(Coord);
   gdsiiRecord.dataType = 3;
-  DeNormalize_WORD(gdsiiRecord.length);
+  DeNormalize_WORD((int16_t&)gdsiiRecord.length);
   file.write(reinterpret_cast<char *>(&gdsiiRecord), sizeof(GDSIIRecord));
   for (size_t i = 0; i < path->coords.size(); ++i) {
     Coord coord = path->coords[i];
@@ -366,7 +366,7 @@ void LayoutWriter_GDSIIbin::WriteSection_PATH(Path *path) {
   gdsiiRecord.recordType = rt_ENDEL;
   gdsiiRecord.length = sizeof(GDSIIRecord);
   gdsiiRecord.dataType = 0;
-  DeNormalize_WORD(gdsiiRecord.length);
+  DeNormalize_WORD((int16_t&)gdsiiRecord.length);
   file.write(reinterpret_cast<char *>(&gdsiiRecord), sizeof(GDSIIRecord));
 }
 

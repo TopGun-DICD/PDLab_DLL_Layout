@@ -9,6 +9,8 @@
 // [2] https://github.com/HomerReid/libGDSII/blob/master/lib/ReadGDSIIFile.cc
 // [3] https://github.com/icdop/gds2gdt/blob/main/libsrc/libgds/gdsdata.h
 // [4] https://www.artwork.com/gdsii/gdsii/index.htm
+// [5] https://github.com/KLayout/klayout/tree/master/src/plugins/streamers/gds2/db_plugin
+// [6] https://github.com/KLayout/klayout/tree/master/src/plugins/streamers/gds2/db_plugin
 
 LayoutReader_GDSIIbin::LayoutReader_GDSIIbin() : p_activeLibrary(nullptr), p_activeElement(nullptr), p_activeGeometry(nullptr) {
 }
@@ -25,7 +27,7 @@ bool LayoutReader_GDSIIbin::IsMyFormat(const std::wstring &fName) {
     return false;
   GDSIIRecord gdsiiRecord;
   file.read(reinterpret_cast<char*>(&gdsiiRecord), sizeof(GDSIIRecord));
-  Normalize_WORD(gdsiiRecord.length);
+  Normalize_WORD((int16_t&)gdsiiRecord.length);
   gdsiiRecord.length -= sizeof(GDSIIRecord);
   if (gdsiiRecord.recordType != rt_HEADER || gdsiiRecord.dataType != DataType::WORD || gdsiiRecord.length != 2) {
     file.close();
@@ -33,7 +35,7 @@ bool LayoutReader_GDSIIbin::IsMyFormat(const std::wstring &fName) {
   }
   file.seekg(gdsiiRecord.length, std::ios_base::cur);
   file.read(reinterpret_cast<char*>(&gdsiiRecord), sizeof(GDSIIRecord));
-  Normalize_WORD(gdsiiRecord.length);
+  Normalize_WORD((int16_t&)gdsiiRecord.length);
   gdsiiRecord.length -= sizeof(GDSIIRecord);
   if (gdsiiRecord.recordType != rt_BGNLIB || gdsiiRecord.dataType != DataType::WORD || gdsiiRecord.length != 24) {
     file.close();
@@ -59,7 +61,7 @@ bool LayoutReader_GDSIIbin::Read(Layout *layout, LayoutReaderOptions *options) {
     file.read(reinterpret_cast<char *>(&gdsiiRecord), sizeof(GDSIIRecord));
     if (file.eof())
       break;
-    Normalize_WORD(gdsiiRecord.length);
+    Normalize_WORD((int16_t&)gdsiiRecord.length);
     gdsiiRecord.length -= sizeof(GDSIIRecord);
 
     switch (gdsiiRecord.recordType) {
@@ -132,7 +134,7 @@ bool LayoutReader_GDSIIbin::Read(Layout *layout, LayoutReaderOptions *options) {
   //std::clock_t stopReading = std::clock();
   layout->fileName    = fileName;
   layout->fileFormat  = FileFormat::GDSII_bin;
-  return ResolveReferences();
+  return PostProcessLayout();
 }
 
 void LayoutReader_GDSIIbin::ReadSection_HEADER(GDSIIRecord &_record) {
@@ -289,6 +291,11 @@ void LayoutReader_GDSIIbin::ReadSection_ENDSTRUCTURE(GDSIIRecord &_record) {
     return;
   }
 
+  ApplyLayoutReaderOptionsToActiveElement();
+
+  if (!p_activeElement)
+    return;
+
   if (!p_activeElement->geometries.empty()) {
     p_activeElement->min = p_activeElement->geometries[0]->min;
     p_activeElement->max = p_activeElement->geometries[0]->max;
@@ -303,15 +310,9 @@ void LayoutReader_GDSIIbin::ReadSection_ENDSTRUCTURE(GDSIIRecord &_record) {
       if (p_activeElement->max.y < p_activeElement->geometries[i]->max.y)
         p_activeElement->max.y = p_activeElement->geometries[i]->max.y;
     }
-  }
 
-  ApplyLayoutReaderOptionsToActiveElement();
-
-  if (!p_activeElement)
-    return;
-
-  if (!p_activeElement->geometries.empty())
     p_activeLibrary->elements.push_back(p_activeElement);
+  }
   else
     delete p_activeElement;
   p_activeElement = nullptr;
@@ -982,54 +983,41 @@ void LayoutReader_GDSIIbin::ApplyLayoutReaderOptionsToActiveElement() {
   }
 }
 
-bool LayoutReader_GDSIIbin::ResolveReferences() {
-  Reference  *p_reference = nullptr;
-  bool                 refFound = false;
+bool LayoutReader_GDSIIbin::PostProcessLayout() {
 
-  // Structure references
+  // Resolve structure references
   for (size_t i = 0; i < p_layout->libraries.size(); ++i)
     for (size_t j = 0; j < p_layout->libraries[i]->elements.size(); ++j)
       for (size_t k = 0; k < p_layout->libraries[i]->elements[j]->geometries.size(); ++k) {
         if (p_layout->libraries[i]->elements[j]->geometries[k]->type != GeometryType::reference)
           continue;
-        p_reference = static_cast<Reference *>(p_layout->libraries[i]->elements[j]->geometries[k]);
-        refFound = false;
-        for (size_t l = 0; l < p_layout->libraries.size() && !refFound; ++l)
-          for (size_t m = 0; m < p_layout->libraries[l]->elements.size() && !refFound; ++m) {
-            if (p_layout->libraries[l]->elements[m]->name == p_reference->name) {
-              p_reference->referenceTo = p_layout->libraries[l]->elements[m];
-              p_layout->libraries[l]->elements[m]->nested = true;
-              refFound = true;
-              break;
-            }
-          }
-        if (!refFound)
+        if (!ResolveStructureReference(static_cast<Reference*>(p_layout->libraries[i]->elements[j]->geometries[k])))
           return false;
       }
 
-  /*// Array references
+  // Fill layer information
+  if (!EnumerateLayers())
+    return false;
+
+  // Calculate bounding box for the library based on bounding boxes of the elements that are not nested
+  EvaluateBoundingBox();
+
+  return true;
+}
+
+bool LayoutReader_GDSIIbin::ResolveStructureReference(Reference* p_reference) {
   for (size_t i = 0; i < p_layout->libraries.size(); ++i)
-    for (size_t j = 0; j < p_layout->libraries[i]->structures.size(); ++j)
-      for (size_t k = 0; k < p_layout->libraries[i]->structures[j]->elements.size(); ++k) {
-        if (p_layout->libraries[i]->structures[j]->elements[k]->type != et_arrayRef)
-          continue;
+    for (size_t j = 0; j < p_layout->libraries[i]->elements.size(); ++j) {
+      if (p_layout->libraries[i]->elements[j]->name == p_reference->name) {
+        p_reference->referenceTo = p_layout->libraries[i]->elements[j];
+        p_layout->libraries[i]->elements[j]->nested = true;
+        return true;
+      }
+    }
+  return false;
+}
 
-        p_arrRef = static_cast<GDSII_ArrayRef *>(p_layout->libraries[i]->structures[j]->elements[k]);
-        refFound = false;
-
-        //TODO: push error message to inform ythat array references are not supported yet
-        /*
-        for (size_t k = 0; k < p_layout->libraries.size() && !refFound; ++k)
-          for (size_t l = 0; l < p_layout->libraries[k]->structures.size() && !refFound; ++l) {
-            if (p_layout->libraries[k]->structures[l]->name == p_strRef->name) {
-              p_strRef->p_ref = p_layout->libraries[k]->structures[l];
-              refFound = true;
-              break;
-            }
-          }
-        */
-      //}
-
+bool LayoutReader_GDSIIbin::EnumerateLayers() {
   Library *p_lib = nullptr;
   for (size_t i = 0; i < p_layout->libraries.size(); ++i) {
     p_lib = p_layout->libraries[i];
@@ -1038,42 +1026,56 @@ bool LayoutReader_GDSIIbin::ResolveReferences() {
         if (p_lib->elements[j]->geometries[k]->type == GeometryType::reference)
           continue;
         int layer = p_lib->elements[j]->geometries[k]->layer;
+        int dtype = 0;
+
+        switch (p_lib->elements[j]->geometries[k]->type) {
+          case GeometryType::polygon:
+            dtype = static_cast<Polygon *>(p_lib->elements[j]->geometries[k])->dataType;
+            break;
+          case GeometryType::path:
+            dtype = static_cast<Path *>(p_lib->elements[j]->geometries[k])->dataType;
+            break;
+        }
+
         size_t l = 0;
-        for(; l < p_lib->layers.size(); ++l)
-          if (p_lib->layers[l].layer == layer) {
-            p_lib->layers[l].geometries.push_back(p_lib->elements[j]->geometries[k]);
+        for (; l < p_lib->layers.size(); ++l)
+          if (p_lib->layers[l].layer == layer && p_lib->layers[l].dataType == dtype) {
+            //p_lib->layers[l].geometries.push_back(p_lib->elements[j]->geometries[k]);
             break;
           }
         if (l < p_lib->layers.size())
           continue;
         Layer li;
         li.layer = layer;
-        li.geometries.push_back(p_lib->elements[j]->geometries[k]);
+        li.dataType = dtype;
+        //li.geometries.push_back(p_lib->elements[j]->geometries[k]);
         p_lib->layers.push_back(li);
       }
     }
   }
+  return true;
+}
 
-  // Calculate bounding box for the library based on bounding boxes of the elements that are not nested
+void LayoutReader_GDSIIbin::EvaluateBoundingBox() {
+  Library* p_lib = nullptr;
   for (size_t i = 0; i < p_layout->libraries.size(); ++i) {
-    
-    for (size_t j = 0; j < p_layout->libraries[i]->elements.size(); ++j) {
-      if (p_layout->libraries[i]->elements[j]->nested)
+    p_lib = p_layout->libraries[i];
+
+    for (size_t j = 0; j < p_lib->elements.size(); ++j) {
+      if (p_lib->elements[j]->nested)
         continue;
 
-      p_layout->libraries[i]->min = p_layout->libraries[i]->elements[j]->min;
-      p_layout->libraries[i]->max = p_layout->libraries[i]->elements[j]->max;
+      p_lib->min = p_lib->elements[j]->min;
+      p_lib->max = p_lib->elements[j]->max;
 
-      if (p_layout->libraries[i]->min.x > p_layout->libraries[i]->elements[j]->min.x)
-        p_layout->libraries[i]->min.x = p_layout->libraries[i]->elements[j]->min.x;
-      if (p_layout->libraries[i]->min.y > p_layout->libraries[i]->elements[j]->min.y)
-        p_layout->libraries[i]->min.y = p_layout->libraries[i]->elements[j]->min.y;
-      if (p_layout->libraries[i]->max.x > p_layout->libraries[i]->elements[j]->max.x)
-        p_layout->libraries[i]->max.x = p_layout->libraries[i]->elements[j]->max.x;
-      if (p_layout->libraries[i]->max.y > p_layout->libraries[i]->elements[j]->max.y)
-        p_layout->libraries[i]->max.y = p_layout->libraries[i]->elements[j]->max.y;
+      if (p_lib->min.x > p_lib->elements[j]->min.x)
+        p_lib->min.x = p_lib->elements[j]->min.x;
+      if (p_lib->min.y > p_lib->elements[j]->min.y)
+        p_lib->min.y = p_lib->elements[j]->min.y;
+      if (p_lib->max.x > p_lib->elements[j]->max.x)
+        p_lib->max.x = p_lib->elements[j]->max.x;
+      if (p_lib->max.y > p_lib->elements[j]->max.y)
+        p_lib->max.y = p_lib->elements[j]->max.y;
     }
   }
-
-  return true;
 }

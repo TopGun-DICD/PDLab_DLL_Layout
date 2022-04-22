@@ -160,27 +160,40 @@
     <ClCompile Include="..\..\sources\GDSIIHelperFunctions.cpp" />
     <ClCompile Include="..\..\sources\Layout.cpp" />
     <ClCompile Include="..\..\sources\LayoutReader.cpp" />
+    <ClCompile Include="..\..\sources\LayoutReader_CIF.cpp" />
+    <ClCompile Include="..\..\sources\LayoutReader_DXF.cpp" />
     <ClCompile Include="..\..\sources\LayoutReader_GDSIIascii.cpp" />
     <ClCompile Include="..\..\sources\LayoutReader_GDSIIbin.cpp" />
+    <ClCompile Include="..\..\sources\LayoutReader_MAG.cpp" />
     <ClCompile Include="..\..\sources\LayoutReader_MSK.cpp" />
     <ClCompile Include="..\..\sources\LayoutReader_OASIS.cpp" />
     <ClCompile Include="..\..\sources\LayoutWriter.cpp" />
+    <ClCompile Include="..\..\sources\LayoutWriter_CIF.cpp" />
+    <ClCompile Include="..\..\sources\LayoutWriter_DXF.cpp" />
     <ClCompile Include="..\..\sources\LayoutWriter_GDSIIascii.cpp" />
     <ClCompile Include="..\..\sources\LayoutWriter_GDSIIbin.cpp" />
+    <ClCompile Include="..\..\sources\LayoutWriter_MAG.cpp" />
     <ClCompile Include="..\..\sources\LayoutWriter_MSK.cpp" />
+    <ClCompile Include="..\..\sources\LayoutWriter_OASIS.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\sources\GDSIIHelperFunctions.hpp" />
     <ClInclude Include="..\..\sources\GDSIITypes.hpp" />
     <ClInclude Include="..\..\sources\Layout.hpp" />
     <ClInclude Include="..\..\sources\LayoutReader.hpp" />
+    <ClInclude Include="..\..\sources\LayoutReader_CIF.hpp" />
+    <ClInclude Include="..\..\sources\LayoutReader_DXF.hpp" />
     <ClInclude Include="..\..\sources\LayoutReader_GDSIIascii.hpp" />
     <ClInclude Include="..\..\sources\LayoutReader_GDSIIbin.hpp" />
+    <ClInclude Include="..\..\sources\LayoutReader_MAG.hpp" />
     <ClInclude Include="..\..\sources\LayoutReader_MSK.hpp" />
     <ClInclude Include="..\..\sources\LayoutReader_OASIS.hpp" />
     <ClInclude Include="..\..\sources\LayoutWriter.hpp" />
+    <ClInclude Include="..\..\sources\LayoutWriter_CIF.hpp" />
+    <ClInclude Include="..\..\sources\LayoutWriter_DXF.hpp" />
     <ClInclude Include="..\..\sources\LayoutWriter_GDSIIascii.hpp" />
     <ClInclude Include="..\..\sources\LayoutWriter_GDSIIbin.hpp" />
+    <ClInclude Include="..\..\sources\LayoutWriter_MAG.hpp" />
     <ClInclude Include="..\..\sources\LayoutWriter_MSK.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

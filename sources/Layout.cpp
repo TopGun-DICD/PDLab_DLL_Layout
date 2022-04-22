@@ -194,17 +194,30 @@ __declspec(dllexport) void CopyLayout(Layout *src, Layout *dst) {
         if (p_lib->elements[j]->geometries[k]->type == GeometryType::reference)
           continue;
         int layer = p_lib->elements[j]->geometries[k]->layer;
+        int dtype = 0;
+
+        switch (p_lib->elements[j]->geometries[k]->type) {
+          case GeometryType::polygon:
+            dtype = static_cast<Polygon*>(p_lib->elements[j]->geometries[k])->dataType;
+            break;
+          case GeometryType::path:
+            dtype = static_cast<Path*>(p_lib->elements[j]->geometries[k])->dataType;
+            break;
+        }
+
+
         size_t l = 0;
         for (; l < p_lib->layers.size(); ++l)
-          if (p_lib->layers[l].layer == layer) {
-            p_lib->layers[l].geometries.push_back(p_lib->elements[j]->geometries[k]);
+          if (p_lib->layers[l].layer == layer && p_lib->layers[l].dataType == dtype) {
+            //p_lib->layers[l].geometries.push_back(p_lib->elements[j]->geometries[k]);
             break;
           }
         if (l < p_lib->layers.size())
           continue;
         Layer li;
         li.layer = layer;
-        li.geometries.push_back(p_lib->elements[j]->geometries[k]);
+        li.dataType = dtype;
+        //li.geometries.push_back(p_lib->elements[j]->geometries[k]);
         p_lib->layers.push_back(li);
       }
     }
