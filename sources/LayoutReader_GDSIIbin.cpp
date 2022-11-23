@@ -1053,6 +1053,19 @@ bool LayoutReader_GDSIIbin::EnumerateLayers() {
       }
     }
   }
+
+  //Re-order layers
+  for (size_t i = 0; i < p_layout->libraries.size(); ++i) {
+    p_lib = p_layout->libraries[i];
+    for (size_t j = 0; j < p_lib->layers.size(); ++j) {
+      for (size_t k = 1; k < p_lib->layers.size(); ++k) {
+        if (p_lib->layers[k].layer < p_lib->layers[k - 1].layer)
+          std::swap(p_lib->layers[k].layer, p_lib->layers[k - 1].layer);
+        if ((p_lib->layers[k].layer == p_lib->layers[k - 1].layer) && (p_lib->layers[k].dataType < p_lib->layers[k - 1].dataType))
+          std::swap(p_lib->layers[k].layer, p_lib->layers[k - 1].layer);
+      }
+    }
+  }
   return true;
 }
 
